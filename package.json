@@ -1,0 +1,32 @@
+{
+  "name": "splendor",
+  "version": "1.0.0",
+  "description": "The dynamic game of Splendor in all its... glory!",
+  "main": "server.js",
+  "scripts": {
+    "test": "splendor-test"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/chanceoneal/Splendor.git"
+  },
+  "author": "Chance O'Neal",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/chanceoneal/Splendor/issues"
+  },
+  "homepage": "https://github.com/chanceoneal/Splendor#readme",
+  "dependencies": {
+    "body-parser": "^1.18.2",
+    "bootstrap": "^4.0.0",
+    "express": "^4.16.3",
+    "http": "0.0.0",
+    "jquery": "^3.3.1",
+    "popper.js": "^1.14.1",
+    "socket.io": "^2.0.4",
+    "sweetalert2": "^7.16.0"
+  },
+  "devDependencies": {
+    "nodemon": "^1.17.2"
+  }
+}
