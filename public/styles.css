@@ -12,9 +12,9 @@ body {
 	padding: 10px;
 }
 
-/* .row {
-	margin-top: 30px;
-} */
+.row {
+	margin-top: 10px;
+}
 
 .top-right {
 	position: absolute !important;
@@ -47,27 +47,27 @@ body {
 }
 
 /* Diamond Playing Card */
-.dpc {
+.diamond {
 	background-image: url("/assets/backgrounds/diamond_bg.jpg");
 }
 
 /* Sapphire Playing Card */
-.spc {
+.sapphire {
 	background-image: url("/assets/backgrounds/sapphire_bg.jpg");
 }
 
 /* Emerald Playing Card */
-.epc {
+.emerald {
 	background-image: url("/assets/backgrounds/emerald_bg.jpg");
 }
 
 /* Ruby Playing Card */
-.rpc {
+.ruby {
 	background-image: url("/assets/backgrounds/ruby_bg.jpg");
 }
 
 /* Onyx Playing Card */
-.opc {
+.onyx {
 	background-image: url("/assets/backgrounds/onyx_bg.jpg");
 }
 
@@ -85,7 +85,7 @@ body {
 }
 
 .price {
-	border-color: white;
+	/* border-color: white; */
 	border-radius: 15px;
 	color: white;
 	height: 30px;
@@ -94,20 +94,20 @@ body {
 	width: 30px;	
 }
 
-.price-diamond {
+.price-diamonds {
 	background-color: white;
 	color: black;
 }
 
-.price-sapphire {
+.price-sapphires {
 	background-color: blue;
 }
 
-.price-emerald {
+.price-emeralds {
 	background-color: green;
 }
 
-.price-ruby {
+.price-rubies {
 	background-color: red;
 }
 
@@ -123,4 +123,42 @@ span {
 .top {
 	display: flow-root;
 	margin-bottom: 8px;
+}
+
+/*
+    Used for notifying player of their turn.
+    Multiple classes for cross-browser compatibility.
+*/
+
+/* Default */
+
+@keyframes blink {
+	50% {
+		background: rgba(48, 230, 48, 0.534);
+		background-size: 75px 150px;
+	}
+}
+
+/* Safari */
+
+@-webkit-keyframes blink {
+	50% {
+		background: rgba(48, 230, 48, 0.534);
+		background-size: 75px 150px;
+	}
+}
+
+/* Firefox */
+
+@-moz-keyframes blink {
+	50% {
+		background: rgba(48, 230, 48, 0.534);
+		background-size: 75px 150px;
+	}
+}
+
+.notify {
+	animation: blink 1s;
+	-webkit-animation: blink 1s;
+	-moz-animation: blink 1s;
 }

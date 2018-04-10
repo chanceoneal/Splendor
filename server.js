@@ -9,19 +9,10 @@ const sapphireJSON = require('./public/assets/json/sapphire.json');
 const emeraldJSON = require('./public/assets/json/emerald.json');
 const rubyJSON = require('./public/assets/json/ruby.json');
 const onyxJSON = require('./public/assets/json/onyx.json');
-// console.log(diamondJSON.deck2);
-
-// const XMLHttpRequest = require('xmlhttprequest').XMLHttpRequest;
-
-// var xhr = new XMLHttpRequest();
-// var method = "GET";
-// var urls = [
-// 	"https://api.myjson.com/bins/5yflb", 	// Diamonds
-// 	"https://api.myjson.com/bins/q765r", 	// Sapphires
-// 	"https://api.myjson.com/bins/1fst67", 	// Emeralds
-// 	"https://api.myjson.com/bins/1530a7", 	// Rubies
-// 	"https://api.myjson.com/bins/oh0i7" 	// Onyx
-// ];
+const nobles = [
+	'Anne_of_Brittany', 'Catherine_de_Medici', 'Charles_V', 'Elisabeth_of_Austria', 'Francis_I_of_France', 'Henry_VIII', 'Isabella_I_of_Castille', 'Niccolo_Machiavelli', 'Suleiman_the_Magnificent'
+];
+const nobleSrc = './public/assets/nobles/';
 
 app.get("/", (req, res) => {
 	res.sendFile(__dirname + "/public/index.html");
@@ -37,7 +28,7 @@ var players = [];
 var observers = [];
 var turns = 0;
 var gameInProgress = false;
-createDecks();
+const NUM_DISPLAY = 4;
 
 io.on('connection', (socket) => {
 	socket.on('new user', (name) => {
@@ -49,13 +40,11 @@ io.on('connection', (socket) => {
 			});
 
 			if (gameInProgress) {
-				socket.emit('message', {
-					message: 'Game is currently in progress. You may join if a spot opens up, or when the game ends if there are less than 4 players'
-				});
+				socket.emit('alert', 'Game is currently in progress. You may join if a spot opens up, or when the game ends if there are less than 4 players');
+				socket.emit('disable new game button');
 			} else {
-				socket.emit('message', {
-					message: 'Lobby is full. You may observe until a spot opens up.'
-				});
+				socket.emit('alert', 'Lobby is full. You may observe until a spot opens up.');
+				socket.emit('disable new game button');
 			}
 		} else {
 			players.push({
@@ -63,14 +52,74 @@ io.on('connection', (socket) => {
 				username: name
 			});
 		}
+	});
 
+	socket.on('disconnect', () => {
+		players.splice(players.findIndex(player => player.id === socket.id), 1);
+		if (observers.length > 0) {
+			players.push(observers.shift());
+		}
+
+		if (players.length <= 1) {
+			turns = 0;
+			gameInProgress = false;
+
+			io.emit('clear board');
+			io.emit('enable new game button');
+			for (let observer in observers) {
+				io.sockets.socket(observer.id).emit('disable new game button');
+			}
+
+		} else if (gameInProgress) {
+			whosTurn();
+		}
 	});
 
 	socket.on('new game', () => {
+		if (players.length === 1) {
+			socket.emit('alert', "There aren't enough players!");
+			return;
+		}
 		createDecks();
+		var noblesToSend = chooseNobles();
+		for (let i = 0; i < NUM_DISPLAY; i++) {
+			io.emit('display card', 'deck1', deck1[i]);
+		}
+
+		for (let i = 0; i < NUM_DISPLAY; i++) {
+			io.emit('display card', 'deck2', deck2[i]);
+		}
+
+		for (let i = 0; i < NUM_DISPLAY; i++) {
+			io.emit('display card', 'deck3', deck3[i]);
+		}
+		io.emit('generate nobles');
+		whosTurn();
+		gameInProgress = true;
+		io.emit('disable new game button');
+		io.emit('show board');
 	});
 
-	socket.on('buy card', () => {
+	socket.on('buy card', (data) => {
+		socket.emit('bought card', data);
+		// io.emit('display card', data);
+		turns++;
+		whosTurn();
+	});
+
+	socket.on('validate', (data) => {
+		if (isObserver(socket.id)) {
+			socket.emit('alert', "You cannot do that; you are currently an observer.");
+			return;
+		}
+		if (!isPlayerTurn(socket.id)) {
+			socket.emit('alert', "It's not your turn!");
+			return;
+		}
+		if (purchaseable(data, socket.id)) {
+			socket.emit('validated', data);
+		}
+		// socket.emit('validated', data);
 
 	});
 });
@@ -149,6 +198,40 @@ function shuffle() {
 		let j = Math.floor(Math.random() * i);
 		[deck3[i - 1], deck3[j]] = [deck3[j], deck3[i - 1]];
 	}
+}
+
+function chooseNobles() {
+	var tempArray = nobles.slice();
+	var returnArray = [];
+	for (let i = 0; i < players.length + 1; i++) {
+		let j = Math.floor(Math.random() * tempArray.length);
+		let noble = tempArray[j];
+		returnArray.push(noble);
+		tempArray.splice(j, 1);
+	}
+	return returnArray;
+}
+
+function whosTurn() {
+	var player = players[turns % players.length];
+	// io.emit('message', player.username + "'s turn.");
+	// io.emit('disable new game button');
+	// io.emit('disable draw buttons');
+	// io.emit('hide drawTotal button');
+	// io.to(player.id).emit('enable draw buttons');
+	io.to(player.id).emit('notify');
+}
+
+function isPlayerTurn(id) {
+	return id === players[turns % players.length].id;
+}
+
+function isObserver(id) {
+	return observers.find(observer => observer.id === id) !== undefined;
+}
+
+function purchaseable(data, id) {
+
 }
 
 var port = process.env.PORT || 3000; // runs on both Azure or local

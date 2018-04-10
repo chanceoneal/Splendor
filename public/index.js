@@ -15,6 +15,8 @@
 
 
 $(() => {
+	var DECKS = 3;
+
 	var names = [
 		"Doc", "Grumpy", "Happy", "Sleepy", "Dopey", "Bashful", "Sneezy", "Bobby", "Gambino",
 		"Dwight", "Egbert", "Eustace", "Cora", "Teddy", "Ursala"
@@ -30,6 +32,22 @@ $(() => {
 	];
 
 	var socket = io();
+	var $newGame = $('#newGame');
+	var $deck1 = $('#deck1');
+	var $deck1Cards = $('#deck1Cards');
+	var $deck2 = $('#deck2');
+	var $deck2Cards = $('#deck2Cards');
+	var $deck3 = $('#deck3');
+	var $deck3Cards = $('#deck3Cards');
+	var totalResources = {
+		diamonds: 0,
+		sapphires: 0,
+		emeralds: 0,
+		rubies: 0,
+		onyx: 0,
+		gold: 0
+	};
+	var gems = 0;
 	var connected = false;
 	var username, userColor;
 	
@@ -55,6 +73,75 @@ $(() => {
 		join();
 	});
 
+	socket.on('show board', () => {
+		$('#cards').attr('hidden', false);
+		$('#tokens').attr('hidden', false);
+	});
+
+	socket.on('display card', (deck, card) => {
+		// var points = card.points === 0 ? '' : card.points;
+		var colDiv = $('<div>').addClass('col-md-3');
+		var cardDiv = $('<div>').addClass(`playing-card ${card.type}`).data('json', JSON.stringify(card)).click({deck: deck, card: card}, validateCard);
+		var cardTop = $('<div>').addClass('top');
+		var pointsSpan = $('<span>').addClass('points').text(card.points === 0 ? '' : card.points);
+		// var gemSpan = $('<span>').addClass('gem').append($(`<img src='/assets/gems/${card.type}.png' alt='${JSON.stringify(card)}'>`));
+		var gemSpan = $('<span>').addClass('gem').append($(`<img src='/assets/gems/${card.type}.png'>`));
+		var cardBottom = $('<div>').addClass('bottom');
+
+		for (let gem in card.price) {
+			if (card.price[gem] !== 0) {
+				var priceDiv = $('<div>').addClass(`price price-${gem}`);
+				var priceSpan = $('<span>');
+				priceSpan.text(card.price[gem]);
+				priceDiv.append(priceSpan);
+				cardBottom.append(priceDiv);
+			}
+		}
+		cardTop.append(pointsSpan, gemSpan);
+		cardDiv.append(cardTop, cardBottom);
+		colDiv.append(cardDiv);
+		$(`#${deck}Cards`).append(colDiv);
+	});
+
+	socket.on('load nobles', (numPlayers) => {
+
+	});
+
+	socket.on('validated', (data) => {
+		socket.emit('buy card', data);
+	});
+
+	socket.on('bought card', (card) => {
+
+	});
+
+	socket.on('alert', (msg) => {
+		swal({
+			type: 'error',
+			text: msg
+		});
+	});
+
+	socket.on('notify', function () {
+		$('body').toggleClass('notify');
+		setTimeout(function () { $('body').toggleClass('notify'); }, 1500);
+		// $.titleAlert("Your Turn!", {
+		// 	requireBlur: true,
+		// 	stopOnFocus: true,
+		// 	interval: 600
+		// });
+		// if (soundEnabled) {
+		// 	var ding = new Audio(getDing());
+		// 	ding.play();
+		// }
+	});
+
+	function validateCard(event) {
+		// var data = $(this).data('json');
+		// alert(event.data.card);
+		socket.emit('validate', event.data);
+	}
+
 	function join(name) {
 		username = name ? name : names[Math.floor(Math.random() * names.length)];
 		userColor = colors[Math.floor(Math.random() * colors.length)];
@@ -63,8 +150,21 @@ $(() => {
 		socket.emit('new user', username, userColor);
 	}
 
-	function buyCard() {
-		
-	}
+	$newGame.click(() => {
+		socket.emit('new game');
+	});
+
+	socket.on('clear board', () => {
+		$('#cards').attr('hidden', true);
+		$('#tokens').attr('hidden', true);
+	});
+
+	socket.on('disable new game button', () => {
+		$newGame.prop('disabled', true);
+	});
+
+	socket.on('enable new game button', () => {
+		$newGame.prop('disabled', false);
+	});
 	
 });
