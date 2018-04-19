@@ -7,6 +7,10 @@ body {
 	width: 66%;
 }
 
+img:hover, .playing-card:hover {
+	cursor: pointer;
+}
+
 .page-header {
 	background-color: darkgoldenrod;
 	padding: 10px;
