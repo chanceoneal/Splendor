@@ -33,13 +33,9 @@ $(() => {
 
 	var socket = io();
 	var $newGame = $('#newGame');
-	var $deck1 = $('#deck1');
-	var $deck1Cards = $('#deck1Cards');
-	var $deck2 = $('#deck2');
-	var $deck2Cards = $('#deck2Cards');
-	var $deck3 = $('#deck3');
-	var $deck3Cards = $('#deck3Cards');
-	var totalResources = {
+	var $nobles = $('#nobles');
+	var $noblesButton = $('#showNobles');
+	var resources = {
 		diamonds: 0,
 		sapphires: 0,
 		emeralds: 0,
@@ -47,7 +43,22 @@ $(() => {
 		onyx: 0,
 		gold: 0
 	};
-	var gems = 0;
+	var gems = {
+		diamonds: 0,
+		sapphires: 0,
+		emeralds: 0,
+		rubies: 0,
+		onyx: 0,
+		gold: 0,
+		total: 0
+	};
+	var cards = {
+		diamonds: 0,
+		sapphires: 0,
+		emeralds: 0,
+		rubies: 0,
+		onyx: 0
+	};
 	var connected = false;
 	var username, userColor;
 	
@@ -79,12 +90,10 @@ $(() => {
 	});
 
 	socket.on('display card', (deck, card) => {
-		// var points = card.points === 0 ? '' : card.points;
 		var colDiv = $('<div>').addClass('col-md-3');
-		var cardDiv = $('<div>').addClass(`playing-card ${card.type}`).data('json', JSON.stringify(card)).click({deck: deck, card: card}, validateCard);
+		var cardDiv = $('<div>').addClass(`playing-card ${card.type}`).data('json', JSON.stringify(card)).click({toValidate: 'card', deck: deck, card: card, resources: resources}, validateCard);
 		var cardTop = $('<div>').addClass('top');
 		var pointsSpan = $('<span>').addClass('points').text(card.points === 0 ? '' : card.points);
-		// var gemSpan = $('<span>').addClass('gem').append($(`<img src='/assets/gems/${card.type}.png' alt='${JSON.stringify(card)}'>`));
 		var gemSpan = $('<span>').addClass('gem').append($(`<img src='/assets/gems/${card.type}.png'>`));
 		var cardBottom = $('<div>').addClass('bottom');
 
@@ -97,21 +106,38 @@ $(() => {
 				cardBottom.append(priceDiv);
 			}
 		}
+
 		cardTop.append(pointsSpan, gemSpan);
 		cardDiv.append(cardTop, cardBottom);
 		colDiv.append(cardDiv);
 		$(`#${deck}Cards`).append(colDiv);
 	});
 
-	socket.on('load nobles', (numPlayers) => {
-
+	socket.on('generate nobles', (src, nobles) => {
+		for (let i = 0; i < nobles.length; i++) {
+			let div = $('<div>').addClass('col text-center');
+			let img = $(`<img src='${src}${nobles[i].name}.jpg' alt='${JSON.stringify(nobles[i].price)}'>`)
+				.attr({width: '150px', height: '150px'})
+				.click({toValidate: 'noble', price: nobles[i].price, resources: resources}, validateNoble);
+			let span = $('<span>').text(nobles[i].name.replace(/[_]/g, " "));
+			div.append(img, span);
+			$nobles.append(div);
+		}
 	});
 
 	socket.on('validated', (data) => {
-		socket.emit('buy card', data);
+		switch (data.toValidate) {
+			case 'card':
+				socket.emit('get card', data);
+				break;
+			case 'noble':
+				socket.emit('get noble', data);
+				break;
+		}
+		// socket.emit('buy card', data);
 	});
 
-	socket.on('bought card', (card) => {
+	socket.on('get card', (card) => {
 
 	});
 
@@ -137,8 +163,10 @@ $(() => {
 	});
 
 	function validateCard(event) {
-		// var data = $(this).data('json');
-		// alert(event.data.card);
+		socket.emit('validate', event.data);
+	}
+
+	function validateNoble(event) {
 		socket.emit('validate', event.data);
 	}
 
@@ -167,4 +195,16 @@ $(() => {
 		$newGame.prop('disabled', false);
 	});
 	
+	socket.on('show nobles button', () => {
+		$noblesButton.attr('hidden', false);
+	});
+
+	socket.on('hide nobles button', () => {
+		$noblesButton.attr('hidden', true);
+	});
+
+	socket.on('nobles button', (hide) => {
+		$noblesButton.attr('hidden', hide);
+	});
+
 });
