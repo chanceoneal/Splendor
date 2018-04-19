@@ -11,119 +11,171 @@
 		<!-- Fonts -->
 		<link href="https://fonts.googleapis.com/css?family=IBM+Plex+Mono|Playfair+Display+SC" rel="stylesheet">
 		<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css" integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm"
-		 crossorigin="anonymous">
+		    crossorigin="anonymous">
 
 	</head>
 
 	<body>
-		<!-- <div class="jumbotron">
-			<h1>Splendor</h1>
-			<p>If you are unfamiliar with the rules, see here:
-				<a href="/assets/Rules_Splendor_US.pdf" target="_blank">Rules</a>.
-			</p>
-		</div> -->
 		<div class="page-header text-center">
 			<h1>Splendor</h1>
+			<span>
+				<a href="/assets/Rules_Splendor_US.pdf" target="_blank">Rules</a>
+			</span>
+		</div>
+
+		<div class="btn-group top-right" role="group">
+			<button type="button" class="btn btn-primary" id="newGame">New Game</button>
+			<button type="button" class="btn btn-info" id="showNobles" data-toggle="modal" data-target="#noblesModal" hidden>Show Nobles</button>
 		</div>
 		<div class="container-fluid">
-
-
-			<div class="row align-items-center">
-				<!-- Noble Container -->
-				<div class="col-md-3 text-center">
-					<h3>Nobles</h3>
-					<div id="noble1" class="col">
-						<p>Noble 1</p>
-					</div>
-					<div id="noble2" class="col">
-						<p>Noble 2</p>
-					</div>
-					<div id="noble3" class="col">
-						<p>Noble 3</p>
-					</div>
-					<div id="noble4" class="col">
-						<p>Noble 4</p>
-					</div>
-					<div id="noble5" class="col">
-						<p>Noble 5</p>
-					</div>
-					<div id="goldToken" class="col">
-						<img src="/assets/gems/gold.png" width="100" height="100">
-					</div>
-				</div>
-
+			<div class="row justify-content-md-center">
 				<!-- Deck Container -->
-				<div class="col-md-6 text-center">
+				<div id="cards" class="col-md-10 text-center" hidden>
 					<h3>Cards</h3>
 					<div class="row">
 						<div class="col-md-3">
-							<p>Deck 3</p>
+							<div id="deck3" class="row no-gutters justify-content-center">
+								<div class="playing-card pcb">
+									<span class="deck-label">III</span>
+								</div>
+							</div>
 						</div>
 						<div class="col-md-9">
-							<img src="/assets/gems/diamond.png" width="100" height="100">
-							<img src="/assets/gems/diamond.png" width="100" height="100">
-							<img src="/assets/gems/diamond.png" width="100" height="100">
-							<img src="/assets/gems/diamond.png" width="100" height="100">
+							<div id="deck3Cards" class="row">
+
+							</div>
 						</div>
 					</div>
 					<div class="row">
 						<div class="col-md-3">
-							<p>Deck 2</p>
+							<div id="deck2" class="row no-gutters justify-content-center">
+								<div class="playing-card pcb">
+									<span class="deck-label">II</span>
+								</div>
+							</div>
 						</div>
 						<div class="col-md-9">
-							<img src="/assets/gems/emerald.png" width="100" height="100">
-							<img src="/assets/gems/emerald.png" width="100" height="100">
-							<img src="/assets/gems/emerald.png" width="100" height="100">
-							<img src="/assets/gems/emerald.png" width="100" height="100">
+							<div id="deck2Cards" class="row">
+
+							</div>
 						</div>
 					</div>
 					<div class="row">
 						<div class="col-md-3">
-							<p>Deck 1</p>
+							<div id="deck1" class="row no-gutters justify-content-center">
+								<div class="playing-card pcb">
+									<span class="deck-label">I</span>
+								</div>
+							</div>
 						</div>
 						<div class="col-md-9">
-							<img src="/assets/gems/ruby.png" width="100" height="100">
-							<img src="/assets/gems/ruby.png" width="100" height="100">
-							<img src="/assets/gems/ruby.png" width="100" height="100">
-							<img src="/assets/gems/ruby.png" width="100" height="100">
+							<div id="deck1Cards" class="row">
+
+							</div>
 						</div>
 					</div>
 				</div>
-
-				<!-- Token Container -->
-				<div class="col-md-3 text-center">
+				<div class="col-md-2 text-center" id="tokens" style="float: right;" hidden>
 					<h3>Tokens</h3>
-					<div id="diamondsTokens" class="col">
-						<!-- <p>Diamonds</p> -->
+					<div id="goldTokens" class="col">
+						<img src="/assets/gems/gold.png" width="100" height="100">
+					</div>
+					<div id="diamondTokens" class="col">
 						<img src="/assets/gems/diamond.png" width="100" height="100">
 					</div>
-					<div id="sapphiresTokens" class="col">
-						<!-- <p>Sapphires</p> -->
+					<div id="sapphireTokens" class="col">
 						<img src="/assets/gems/sapphire.png" width="100" height="100">
 					</div>
-					<div id="emeraldsTokens" class="col">
-						<!-- <p>Emeralds</p> -->
+					<div id="emeraldTokens" class="col">
 						<img src="/assets/gems/emerald.png" width="100" height="100">
 					</div>
-					<div id="rubiesTokens" class="col">
-						<!-- <p>Rubies</p> -->
+					<div id="rubyTokens" class="col">
 						<img src="/assets/gems/ruby.png" width="100" height="100">
 					</div>
 					<div id="onyxTokens" class="col">
-						<!-- <p>Onyx</p> -->
 						<img src="/assets/gems/onyx.png" width="100" height="100">
 					</div>
+				</div>
+			</div>
+			<!-- <div class="row"> -->
+				<div id="tokensInHand" class="row text-center">
+					<div id="dtih" class="col">
+						<p>diamonds</p>
+					</div>
+					<div id="stih" class="col">
+						<p>sapphires</p>
+					</div>
+					<div id="etih" class="col">
+						<p>emeralds</p>
+					</div>
+					<div id="rtih" class="col">
+						<p>rubies</p>
+					</div>
+					<div id="otih" class="col">
+						<p>onyx</p>
+					</div>
+					<div id="gtih" class="col">
+						<p>gold</p>
+					</div>
+				</div>
+				<div id="cardsInHand" class="row text-center">
+					<div id="dcih" class="col">
+						<p>diamonds</p>
+					</div>
+					<div id="scih" class="col">
+						<p>sapphires</p>
+					</div>
+					<div id="ecih" class="col">
+						<p>emeralds</p>
+					</div>
+					<div id="rcih" class="col">
+						<p>rubies</p>
+					</div>
+					<div id="ocih" class="col">
+						<p>onyx</p>
+					</div>
+					<div id="reserved" class="col">
+						<p>reserved</p>
+					</div>
+				</div>
+			<!-- </div> -->
+		</div>
+
+		<div class="modal fade" id="noblesModal" tabindex="-1" role="dialog" aria-labelledby="nobleLabel" aria-hidden="true">
+			<div class="modal-dialog modal-dialog-centered modal-lg" role="document">
+				<div class="modal-content">
+					<div class="modal-header">
+						<h3 class="modal-title" id="nobleLabel">
+							<strong>Nobles</strong>
+							</h5>
+							<button type="button" class="close" data-dismiss="modal" aria-label="Close">
+								<span aria-hidden="true">&times;</span>
+							</button>
+					</div>
+					<div class="modal-body">
+						<div id="nobles" class="row no-gutters justify-content-md-center">
+							
+						</div>
+					</div>
+					<!-- <div class="modal-footer">
+								<button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+							</div> -->
 				</div>
 			</div>
 		</div>
 
 
+		<script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/2.0.4/socket.io.js"></script>
 		<script src="https://code.jquery.com/jquery-3.2.1.slim.min.js" integrity="sha384-KJ3o2DKtIkvYIK3UENzmM7KCkRr/rE9/Qpg6aAZGJwFDMVNA/GpGFF93hXpG5KkN"
-		 crossorigin="anonymous"></script>
+		    crossorigin="anonymous"></script>
 		<script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js" integrity="sha384-ApNbgh9B+Y1QKtv3Rn7W3mgPxhU9K/ScQsAP7hUibX39j7fakFPskvXusvfa0b4Q"
-		 crossorigin="anonymous"></script>
+		    crossorigin="anonymous"></script>
 		<script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js" integrity="sha384-JZR6Spejh4U02d8jOt6vLEHfe/JQGiRRSQQxSfFWpi1MquVdAyjUar5+76PVCmYl"
-		 crossorigin="anonymous"></script>
+		    crossorigin="anonymous"></script>
+		<script src="https://cdnjs.cloudflare.com/ajax/libs/limonte-sweetalert2/6.11.0/sweetalert2.all.min.js"></script>
+
+
+		<script src="index.js"></script>
 	</body>
 
 </html>
