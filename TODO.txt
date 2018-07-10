@@ -1,0 +1,3 @@
+* Keep track of tokens when removed
+* Add ability to reserve displayed cards
+* Check for noble visits after each purchased card
