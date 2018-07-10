@@ -11,7 +11,7 @@
 		<!-- Fonts -->
 		<link href="https://fonts.googleapis.com/css?family=IBM+Plex+Mono|Playfair+Display+SC" rel="stylesheet">
 		<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css" integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm"
-		    crossorigin="anonymous">
+		 crossorigin="anonymous">
 
 	</head>
 
@@ -78,66 +78,60 @@
 				<div class="col-md-2 text-center" id="tokens" style="float: right;" hidden>
 					<h3>Tokens</h3>
 					<div id="goldTokens" class="col">
-						<img src="/assets/gems/gold.png" width="100" height="100">
 					</div>
 					<div id="diamondTokens" class="col">
-						<img src="/assets/gems/diamond.png" width="100" height="100">
 					</div>
 					<div id="sapphireTokens" class="col">
-						<img src="/assets/gems/sapphire.png" width="100" height="100">
 					</div>
 					<div id="emeraldTokens" class="col">
-						<img src="/assets/gems/emerald.png" width="100" height="100">
 					</div>
 					<div id="rubyTokens" class="col">
-						<img src="/assets/gems/ruby.png" width="100" height="100">
 					</div>
 					<div id="onyxTokens" class="col">
-						<img src="/assets/gems/onyx.png" width="100" height="100">
 					</div>
 				</div>
 			</div>
 			<!-- <div class="row"> -->
-				<div id="tokensInHand" class="row text-center">
-					<div id="dtih" class="col">
-						<p>diamonds</p>
-					</div>
-					<div id="stih" class="col">
-						<p>sapphires</p>
-					</div>
-					<div id="etih" class="col">
-						<p>emeralds</p>
-					</div>
-					<div id="rtih" class="col">
-						<p>rubies</p>
-					</div>
-					<div id="otih" class="col">
-						<p>onyx</p>
-					</div>
-					<div id="gtih" class="col">
-						<p>gold</p>
-					</div>
+			<div id="tokensInHand" class="row text-center">
+				<div id="diamondtih" class="col">
+					<p>diamonds</p>
 				</div>
-				<div id="cardsInHand" class="row text-center">
-					<div id="dcih" class="col">
-						<p>diamonds</p>
-					</div>
-					<div id="scih" class="col">
-						<p>sapphires</p>
-					</div>
-					<div id="ecih" class="col">
-						<p>emeralds</p>
-					</div>
-					<div id="rcih" class="col">
-						<p>rubies</p>
-					</div>
-					<div id="ocih" class="col">
-						<p>onyx</p>
-					</div>
-					<div id="reserved" class="col">
-						<p>reserved</p>
-					</div>
+				<div id="sapphiretih" class="col">
+					<p>sapphires</p>
 				</div>
+				<div id="emeraldtih" class="col">
+					<p>emeralds</p>
+				</div>
+				<div id="rubytih" class="col">
+					<p>rubies</p>
+				</div>
+				<div id="onyxtih" class="col">
+					<p>onyx</p>
+				</div>
+				<div id="goldtih" class="col">
+					<p>gold</p>
+				</div>
+			</div>
+			<div id="cardsInHand" class="row text-center">
+				<div id="diamondcih" class="col">
+					<p>diamonds</p>
+				</div>
+				<div id="sapphirecih" class="col">
+					<p>sapphires</p>
+				</div>
+				<div id="emeraldcih" class="col">
+					<p>emeralds</p>
+				</div>
+				<div id="rubycih" class="col">
+					<p>rubies</p>
+				</div>
+				<div id="onyxcih" class="col">
+					<p>onyx</p>
+				</div>
+				<div id="reserved" class="col">
+					<p>reserved</p>
+				</div>
+			</div>
 			<!-- </div> -->
 		</div>
 
@@ -154,7 +148,7 @@
 					</div>
 					<div class="modal-body">
 						<div id="nobles" class="row no-gutters justify-content-md-center">
-							
+
 						</div>
 					</div>
 					<!-- <div class="modal-footer">
@@ -164,14 +158,34 @@
 			</div>
 		</div>
 
+		<div class="modal fade" id="tokensModal" tabindex="-1" role="dialog" aria-labelledby="tokenLabel" aria-hidden="true">
+			<div class="modal-dialog modal-dialog-centered modal-lg" role="document">
+				<div class="modal-content">
+					<div class="modal-header text-center">
+						<h3 class="modal-title" id="tokenLabel">
+							<strong>Remove Tokens</strong>
+						</h3>
+					</div>
+					<div class="modal-body">
+						<div id="tokensToRemove" class="row no-gutters justify-content-md-center">
+
+						</div>
+					</div>
+					<div class="modal-footer">
+						<button id="removeTokens" type="button" class="btn btn-secondary">Remove Tokens</button>
+					</div>
+				</div>
+			</div>
+		</div>
+
 
 		<script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/2.0.4/socket.io.js"></script>
 		<script src="https://code.jquery.com/jquery-3.2.1.slim.min.js" integrity="sha384-KJ3o2DKtIkvYIK3UENzmM7KCkRr/rE9/Qpg6aAZGJwFDMVNA/GpGFF93hXpG5KkN"
-		    crossorigin="anonymous"></script>
+		 crossorigin="anonymous"></script>
 		<script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js" integrity="sha384-ApNbgh9B+Y1QKtv3Rn7W3mgPxhU9K/ScQsAP7hUibX39j7fakFPskvXusvfa0b4Q"
-		    crossorigin="anonymous"></script>
+		 crossorigin="anonymous"></script>
 		<script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js" integrity="sha384-JZR6Spejh4U02d8jOt6vLEHfe/JQGiRRSQQxSfFWpi1MquVdAyjUar5+76PVCmYl"
-		    crossorigin="anonymous"></script>
+		 crossorigin="anonymous"></script>
 		<script src="https://cdnjs.cloudflare.com/ajax/libs/limonte-sweetalert2/6.11.0/sweetalert2.all.min.js"></script>
 
 
