@@ -1,3 +1,5 @@
 * Keep track of tokens when removed
 * Add ability to reserve displayed cards
+	** With that, adjust the current functionality to use the same function for reserving from the deck or displayed cards
 * Check for noble visits after each purchased card
+* 
