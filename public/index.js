@@ -37,11 +37,44 @@ $(() => {
 	var $noblesButton = $('#showNobles');
 	var $tokensToRemove = $('#tokensToRemove');
 	var $removeTokens = $('#removeTokens');
+
+	// Replace all instances of the resources, tokens, cards, score,
+	// connected, and username variables with the Player fields.
+	var Player = {
+		username: "",
+		connected: false,
+		score: 0,
+		resources: {
+			diamond: 0,
+			sapphire: 0,
+			emerald: 0,
+			ruby: 0,
+			onyx: 0,
+			gold: 0
+		},
+		tokens: {
+			diamond: 0,
+			sapphire: 0,
+			emerald: 0,
+			ruby: 0,
+			onyx: 0,
+			gold: 0,
+			total: 0
+		},
+		cards: {
+			diamond: 0,
+			sapphire: 0,
+			emerald: 0,
+			ruby: 0,
+			onyx: 0,
+			reserved: 0
+		}
+	};
 	var resources = {
-		diamonds: 0,
-		sapphires: 0,
-		emeralds: 0,
-		rubies: 0,
+		diamond: 0,
+		sapphire: 0,
+		emerald: 0,
+		ruby: 0,
 		onyx: 0,
 		gold: 0
 	};
@@ -91,58 +124,22 @@ $(() => {
 	socket.on('show board', () => {
 		$('#cards').attr('hidden', false);
 		$('#tokens').attr('hidden', false);
-		$('#deck1').click({
+		$('#deck1 .playing-card').click({
+			src: 'deck',
 			deck: 'deck1'
 		}, reserveCard);
-		$('#deck2').click({
+		$('#deck2 .playing-card').click({
+			src: 'deck',
 			deck: 'deck2'
 		}, reserveCard);
-		$('#deck3').click({
+		$('#deck3 .playing-card').click({
+			src: 'deck',
 			deck: 'deck3'
 		}, reserveCard);
 	});
 
-	socket.on('display card', (deck, card, reserve) => {
-		var cardDiv = $('<div></div>').addClass(`playing-card ${card.type}`).click({
-			toValidate: 'card',
-			deck: deck,
-			card: card,
-			resources: resources,
-			reserved: reserve
-		}, validateCard);
-		var cardTop = $('<div></div>').addClass('top');
-		var pointsSpan = $('<span></span>').addClass('points').text(card.points === 0 ? '' : card.points);
-		var gemSpan = $('<span></span>').addClass('gem').append($(`<img src='/assets/gems/${card.type}.png'>`));
-		var cardBottom = $('<div></div>').addClass('bottom');
-
-		for (let gem in card.price) {
-			if (card.price[gem] !== 0) {
-				var priceDiv = $('<div></div>').addClass(`price price-${gem}`);
-				var priceSpan = $('<span></span>');
-				priceSpan.text(card.price[gem]);
-				priceDiv.append(priceSpan);
-				cardBottom.append(priceDiv);
-			}
-		}
-
-		cardTop.append(pointsSpan, gemSpan);
-		cardDiv.append(cardTop, cardBottom);
-
-		if (!reserve) {
-			var colDiv = $('<div></div>').addClass('col-md-3').attr('json', JSON.stringify(card));
-			colDiv.append(cardDiv);
-			$(`#${deck}Cards`).append(colDiv);
-		} else {
-			var colDiv = $('<div></div>').attr('json', JSON.stringify(card));
-			colDiv.append(cardDiv)
-				.css({
-					"margin-top": `${cards.reserved * 50}px`,
-					"margin-left": `${cards.reserved * 5}px`,
-					"position": 'absolute'
-				});
-			cards.reserved += 1;
-			$('#reserved').append(colDiv);
-		}
+	socket.on('display card', (deck, card) => {
+		displayCard(deck, card);
 	});
 
 	socket.on('display token', (token, number) => {
@@ -167,12 +164,12 @@ $(() => {
 				.attr({
 					width: '150px',
 					height: '150px'
-				})
-				.click({
-					toValidate: 'noble',
-					price: nobles[i].price,
-					resources: resources
-				}, validateNoble);
+				});
+				// .click({
+				// 	toValidate: 'noble',
+				// 	price: nobles[i].price,
+				// 	resources: resources
+				// }, validateNoble);
 			let span = $('<span></span>').text(nobles[i].name.replace(/[_]/g, " "));
 			div.append(img, span);
 			$nobles.append(div);
@@ -180,18 +177,14 @@ $(() => {
 	});
 
 	socket.on('validated', (data) => {
-		switch (data.toValidate) {
-			case 'card':
-				socket.emit('get card', data);
-				break;
-			case 'noble':
-				socket.emit('get noble', data);
-				break;
-		}
+		socket.emit('get card', data);
 		// socket.emit('buy card', data);
 	});
 
 	socket.on('get card', (data) => {
+		// Removes the tokens needed to purchase the card
+		purchaseCard(data.card.price);
+		
 		// Removes the click event handler from the purchased card
 		$(`[json='${JSON.stringify(data.card)}']`)
 			.children()
@@ -199,20 +192,24 @@ $(() => {
 
 		// Add the purchased card to the player's hand
 		// Also remove the class to properly position the card
-		$(`#${data.card.type}cih`)
-			.append($(`[json='${JSON.stringify(data.card)}']`)
-				.removeClass('col-md-3')
-				.css({
-					"margin-top": `${cards[data.card.type] * 50}px`,
-					"margin-left": `${cards[data.card.type] * 5}px`,
-					"position": 'absolute'
-				}));
+		getCard(data.card);
+		// $(`#${data.card.type}cih`)
+		// 	.append($(`[json='${JSON.stringify(data.card)}']`)
+		// 		.removeClass('col-md-3')
+		// 		.css({
+		// 			"margin-top": `${cards[data.card.type] * 50}px`,
+		// 			"margin-left": `${cards[data.card.type] * 5}px`,
+		// 			"position": 'absolute'
+		// 		}));
 		cards[data.card.type] += 1;
 		if (data.reserved) {
 			cards.reserved -= 1;
 		}
+		resources[data.card.type]++;
+		score += data.card.points;
 	});
 
+	// Allows the user to add the token to their hand
 	socket.on('get token', (token, double, lastGrab) => {
 		addTokenToHand(token, double);
 
@@ -223,24 +220,33 @@ $(() => {
 		}
 	});
 
+	// Removes card from the board (so nobody else can purchase it)
 	socket.on('remove card', (data) => {
 		$(`[json='${JSON.stringify(data.card)}']`).remove();
 	});
 
-	socket.on('remove token', (token, double) => {
-		removeToken(token, double);
+	// Removes token(s) from the board (so nobody else can take it)
+	socket.on('remove token from stack', (token, double) => {
+		removeTokenFromStack(token, double);
 	});
 
+	// Replaces the token(s)
 	socket.on('add token to stack', (token, amount) => {
 		for (let i = 0; i < amount; i++) {
 			addTokenToStack(token);
 		}
 	});
 
+	// Displays the empty deck
 	socket.on('deck is empty', (deck) => {
 		$(`#${deck}`).children().removeClass('pcb').addClass('empty').children().text("EMPTY");
 	});
 
+	/**
+	 * Alerts the player(s)
+	 * @param {string} type - The type of message (success, error, warning, info, question)
+	 * @param {string} msg  - The message to be displayed
+	 */
 	socket.on('alert', (type, msg) => {
 		sweetAlert(type, msg);
 	});
@@ -294,13 +300,97 @@ $(() => {
 		$noblesButton.attr('hidden', hide);
 	});
 
-	function validateCard(event) {
-		socket.emit('validate', event.data);
+	socket.on('reserve card', (card, src) => {
+		switch (src) {
+			case 'deck':
+				displayCard(null, card, true);
+				break;
+			case 'card':
+				getCard(card, true);
+				cards.reserved++;
+		}
+		// displayCard(null, card, true);
+	});
+
+	// Add the purchased/reserved card to the player's hand
+	// Also remove the class to properly position the card
+	function getCard(card, reserved) {
+		let id = reserved ? '#reserved' : `#${card.type}cih`;
+		let margins = reserved ? cards.reserved : cards[card.type];
+		$(id)
+			.append($(`[json='${JSON.stringify(card)}']`)
+				.removeClass('col-md-3')
+				.css({
+					"margin-top": `${margins * 50}px`,
+					"margin-left": `${margins * 5}px`,
+					"position": 'absolute'
+				}));
 	}
 
-	function validateNoble(event) {
-		socket.emit('validate', event.data);
+	// Displays cards from the deck to the public board, or to
+	// a player's hand if they reserve from the deck.
+	function displayCard(deck, card, reserved) {
+		var cardDiv = $('<div></div>').addClass(`playing-card ${card.type}`).click({
+			src: 'card',
+			card: card,
+			deck: deck,
+			resources: resources
+		}, validateCard);
+		var cardTop = $('<div></div>').addClass('top');
+		var pointsSpan = $('<span></span>').addClass('points').text(card.points === 0 ? '' : card.points);
+		var gemSpan = $('<span></span>').addClass('gem').append($(`<img src='/assets/gems/${card.type}.png'>`));
+		var cardBottom = $('<div></div>').addClass('bottom');
+
+		for (let gem in card.price) {
+			if (card.price[gem] !== 0) {
+				var priceDiv = $('<div></div>').addClass(`price price-${gem}`);
+				var priceSpan = $('<span></span>');
+				priceSpan.text(card.price[gem]);
+				priceDiv.append(priceSpan);
+				cardBottom.append(priceDiv);
+			}
+		}
+
+		cardTop.append(pointsSpan, gemSpan);
+		cardDiv.append(cardTop, cardBottom);
+
+		// var colDiv = $('<div></div>').addClass('col-md-3').attr('json', JSON.stringify(card));
+		// colDiv.append(cardDiv);
+		// $(`#${deck}Cards`).append(colDiv);
+
+		var colDiv;
+		if (!reserved) {
+			colDiv = $('<div></div>').addClass('col-md-3').attr('json', JSON.stringify(card));
+			colDiv.append(cardDiv);
+			$(`#${deck}Cards`).append(colDiv);
+		} else {
+			colDiv = $('<div></div>').attr('json', JSON.stringify(card));
+			colDiv.append(cardDiv)
+				.css({
+					"margin-top": `${cards.reserved * 50}px`,
+					"margin-left": `${cards.reserved * 5}px`,
+					"position": 'absolute'
+				});
+			cards.reserved += 1;
+			$('#reserved').append(colDiv);
+		}
 	}
+	/**
+	 * Validates 
+	 * @param {object} event - Object representing the card to be validated.
+	 */
+	function validateCard(event) {
+		if (event.shiftKey) {
+			reserveCard(event);
+			// socket.emit('reserve card', event.data);
+		} else {
+			socket.emit('validate', event.data);
+		}
+	}
+
+	// function validateNoble(event) {
+	// 	socket.emit('validate', event.data);
+	// }
 
 	function getToken(event) {
 		if (event.shiftKey) {
@@ -313,6 +403,7 @@ $(() => {
 	function addTokenToHand(token, double) {
 		tokens[token]++;
 		tokens.total++;
+		resources[token]++;
 		let tokenDiv = $(`#${token}Tokens div:last-child`).css({
 			'margin-left': `${tokens[token] * 5}px`
 		});
@@ -322,6 +413,7 @@ $(() => {
 		if (double) {
 			tokens[token]++;
 			tokens.total++;
+			resources[token]++;
 			tokenDiv = $(`#${token}Tokens div:last-child`).unbind('click').css({
 				'margin-left': `${tokens[token] * 5}px`
 			});
@@ -331,7 +423,6 @@ $(() => {
 
 	function addTokenToStack(token) {
 		let offset = parseInt($(`#${token}Tokens div:last-child`).css('margin-left'));
-		console.log(offset);
 		let tokenDiv = $(`#${token}Tokens`);
 		let imgDiv = $('<div></div>').css({
 			'position': 'absolute',
@@ -344,21 +435,48 @@ $(() => {
 		tokenDiv.append(imgDiv);
 	}
 
-	function removeTokensFromHand(tokens, amounts) {
+	function purchaseCard(price) {
+		let tokensToRemove = [];
+		let amounts = [];
+		let goldToRemove = 0;
+		for (let token in price) {
+			if (cards[token] < price[token]) {
+				let diff = price[token] - cards[token];
+				let amount = tokens[token];
+				if (tokens[token] < diff) {
+					goldToRemove += diff - tokens[token];
+				}
+				tokensToRemove.push(token);
+				amounts.push(amount);
+			}
+		}
+		if (goldToRemove > 0) {
+			tokensToRemove.push('gold');
+			amounts.push(goldToRemove);
+		}
+		removeTokensFromHand(tokensToRemove, amounts);
+	}
+
+	function removeTokensFromHand(tokensToRemove, amounts) {
 		for (let i = 0; i < amounts.length; i++) {
 			if (amounts[i] !== 0) {
 				for (let j = 0; j < amounts[i]; j++) {
-					$(`#${tokens[i]}tih div:last-child`).remove();
-					addTokenToStack(tokens[i]);
+					$(`#${tokensToRemove[i]}tih div:last-child`).remove();
+					addTokenToStack(tokensToRemove[i]);
+					resources[tokensToRemove[i]]--;
+					// Player.tokens[tokensToRemove[i]]--;
+					tokens[tokensToRemove[i]]--;
+					tokens.total--;
 				}
-				socket.emit('add token to stack', tokens[i], amounts[i]);
+				socket.emit('add token to stack', tokensToRemove[i], amounts[i]);
 			}
 		}
+
 		$('#tokensModal').modal('hide');
 		socket.emit('next turn');
 	}
 
-	function removeToken(token, double) {
+	function removeTokenFromStack(token, double) {
 		$(`#${token}Tokens div:last-child`).remove();
 		if (double) {
 			$(`#${token}Tokens div:last-child`).remove();
@@ -407,6 +525,7 @@ $(() => {
 			text: msg
 		});
 	}
+
 	$removeTokens.click(() => {
 		let values = [];
 		let tokenData = [];
@@ -422,9 +541,6 @@ $(() => {
 		} else {
 			removeTokensFromHand(tokenData, values);
 		}
-		console.log(total);
-		console.log(values);
-		console.log(tokenData);
 	});
 
 	$newGame.click(() => {

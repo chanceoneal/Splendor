@@ -1,5 +1,4 @@
 // Handles server-side logic
-
 const express = require('express');
 const app = express();
 const http = require('http').Server(app);
@@ -33,8 +32,9 @@ var tokens = {
 	emerald: 7,
 	ruby: 7,
 	onyx: 7,
-	gold: 5
+	gold: 5,
 };
+var totalTokens = 35;
 var turns = 0;
 var gameInProgress;
 const NUM_DISPLAY = 4;
@@ -175,12 +175,12 @@ io.on('connection', (socket) => {
 		if (deckIsEmpty(data.deck)) {
 			io.emit('deck is empty', data.deck);
 		}
-		turns++;
-		whoseTurn();
+		// turns++;
+		// whoseTurn();
 	});
 
 	// Factor 'get card' and 'reserve card'
-	socket.on('reserve card', (data) => {
+	socket.on('reserve card', (data, src) => {
 		if (isObserver(socket.id)) {
 			socket.emit('alert', 'error', "You cannot do that; you are currently an observer.");
 			return;
@@ -191,27 +191,54 @@ io.on('connection', (socket) => {
 		}
 
 		if (socket.hasTakenGem) {
-			socket.emit('alert', 'error', "You can't take a card after you've taken a token!");
+			socket.emit('alert', 'error', "You can't reserve a card after you've taken a token!");
 			return;
 		}
 
-		switch (data.deck) {
-			case 'deck1':
-				socket.emit('display card', 'deck1', deck1.pop(), true);
-				socket.emit('get token', 'gold');
+		switch (data.src) {
+			case 'deck':
+				switch (data.deck) {
+					case 'deck1':
+						socket.emit('reserve card', deck1.pop(), data.src);
+						break;
+					case 'deck2':
+						socket.emit('reserve card', deck2.pop(), data.src);
+						break;
+					case 'deck3':
+						socket.emit('reserve card', deck3.pop(), data.src);
+						break;
+				}
 				break;
-			case 'deck2':
-				socket.emit('display card', 'deck2', deck2.pop(), true);
-				socket.emit('get token', 'gold');
-				break;
-			case 'deck3':
-				socket.emit('display card', 'deck3', deck3.pop(), true);
-				socket.emit('get token', 'gold');
+			case 'card':
+				socket.emit('reserve card', data.card, data.src);
+				socket.broadcast.emit('remove card', data);
+				switch (data.deck) {
+					case 'deck1':
+						io.emit('display card', 'deck1', deck1.pop());
+						break;
+					case 'deck2':
+						io.emit('display card', 'deck2', deck2.pop());
+						break;
+					case 'deck3':
+						io.emit('display card', 'deck3', deck3.pop());
+						break;
+				}
 				break;
 		}
+
+		if (tokens.gold === 0) {
+			socket.emit('alert', 'info', "You reserved a card, but the gold stack is currently empty so you don't get a gold token.");
+		} else {
+			tokens.gold--;
+			totalTokens--;
+			socket.emit('get token', 'gold');
+			socket.broadcast.emit('remove token from stack', 'gold');
+		}
+
 		if (deckIsEmpty(data.deck)) {
 			io.emit('deck is empty', data.deck);
 		}
+
 		turns++;
 		whoseTurn();
 	});
@@ -229,37 +256,49 @@ io.on('connection', (socket) => {
 		} else if (tokens[data.token] === 0) { 
 			// If the stack is empty, the player can't take from it (shouldn't ever be emitted).
 			socket.emit('alert', 'info', 'This token stack is empty.');
-		} else if (tokens[data.token] < 4 && double) { // Prevents the player from taking 2 tokens at once from a stack with <4 tokens.
+		} else if ((tokens[data.token] < 4 && double) || (tokens[data.token] < 3 && socket.gemsTaken.length === 1 && socket.gemsTaken.includes(data.token))) { // Prevents the player from taking 2 tokens from a stack with <4 tokens.
 			socket.emit('alert', 'error', "You can only take two tokens when there are at least 4 tokens in the stack.");
 		} else if ((double && socket.hasTakenGem) || (socket.gemsTaken.length === 2 && socket.gemsTaken.includes(data.token))) {
 			// Prevents the player from taking 2 tokens when they've already taken a token.
 			socket.emit('alert', 'error', "You can't take two of the same token if you've already taken another token.");
-		} else if (double) { 
+		} else if (double) {
 			// Allows the player to take two tokens.
 			tokens[data.token] -= 2;
+			totalTokens -= 2;
 			socket.hasTakenGem = false;
 			socket.gemsTaken.length = 0;
 			socket.emit('get token', data.token, double, true);
-			socket.broadcast.emit('remove token', data.token, double);
-		} else if (socket.gemsTaken.length === 1 && socket.gemsTaken[0] === data.token && tokens[data.token] >= 3) { 
+			socket.broadcast.emit('remove token from stack', data.token, double);
+		} else if (socket.gemsTaken.length === 1 && socket.gemsTaken[0] === data.token && tokens[data.token] >= 3) {
 			// Allows the player to take the same token twice in a row if it's the only token they've taken.
 			tokens[data.token]--;
+			totalTokens--;
 			socket.hasTakenGem = false;
 			socket.gemsTaken.length = 0;
 			socket.emit('get token', data.token, false, true);
-			socket.broadcast.emit('remove token', data.token);
+			socket.broadcast.emit('remove token from stack', data.token);
 		} else { 
 			// Allows the player to take a token and determines if the player's turn is over.
-			socket.hasTakenGem = socket.gemsTaken.length !== 3;
-			socket.gemsTaken.push(data.token);
 			tokens[data.token]--;
+			totalTokens--;
+			socket.gemsTaken.push(data.token);
+			socket.hasTakenGem = socket.gemsTaken.length !== 3;
 			socket.emit('get token', data.token, false, socket.gemsTaken.length === 3);
-			socket.broadcast.emit('remove token', data.token);
+			socket.broadcast.emit('remove token from stack', data.token);
 			socket.gemsTaken.length = socket.gemsTaken.length === 3 ? 0 : socket.gemsTaken.length;
+		}
+
+		if (totalTokens === 0) {
+			socket.hasTakenGem = false;
+			socket.gemsTaken.length = 0;
+			turns++;
+			whoseTurn();
 		}
 	});
 
 	socket.on('add token to stack', (token, number) => {
+		tokens[token] += number;
+		totalTokens += number;
 		socket.broadcast.emit('add token to stack', token, number);
 	});
 
@@ -272,10 +311,10 @@ io.on('connection', (socket) => {
 			socket.emit('alert', 'error', "It's not your turn!");
 			return;
 		}
-		if (purchaseable(data, socket.id)) {
+		if (purchaseable(data)) {
 			socket.emit('validated', data);
 		} else {
-			socket.emit('alert', 'error', `You cannot afford this ${data.toValidate}.`);
+			socket.emit('alert', 'error', "You cannot afford this card. To reserve the card, hold the SHIFT key while selecting it.");
 		}
 	});
 
@@ -380,18 +419,21 @@ function checkTokens(reset) {
 			onyx: 7,
 			gold: 5
 		};
+		totalTokens = 35;
 		return;
 	}
 	if (players.length === 3) {
 		for (let gem in tokens) {
 			if (gem !== 'gold') {
 				tokens[gem] -= 2;
+				totalTokens -= 2;
 			}
 		}
 	} else if (players.length === 2) {
 		for (let gem in tokens) {
 			if (gem !== 'gold') {
 				tokens[gem] -= 3;
+				totalTokens -= 3;
 			}
 		}
 	}
@@ -430,35 +472,48 @@ function isObserver(id) {
 	return observers.find(observer => observer.id === id) !== undefined;
 }
 
-function purchaseable(data, id) {
-	switch (data.toValidate) {
-		case 'card':
-			for (let gem in data.card.price) {
-				if (data.card.price[gem] > data.resources[gem]) {
-					let diff = data.card.price[gem] - data.resources[gem];
-					if (data.resources.gold >= diff) {
-						data.resources.gold -= diff;
-						data.resources[gem] += diff;
-					} else {
-						return false;
-					}
-				}
+function purchaseable(data) {
+	for (let gem in data.card.price) {
+		if (data.card.price[gem] > data.resources[gem]) {
+			let diff = data.card.price[gem] - data.resources[gem];
+			if (data.resources.gold >= diff) {
+				data.resources.gold -= diff;
+				data.resources[gem] += diff;
+			} else {
+				return false;
 			}
-			return true;
-		case 'noble':
-			for (let gem in data.price) {
-				if (data.price[gem] > data.resources[gem]) {
-					let diff = data.price[gem] - data.resources[gem];
-					if (data.resources.gold >= diff) {
-						data.resources.gold -= diff;
-						data.resources[gem] += diff;
-					} else {
-						return false;
-					}
-				}
-			}
-			return true;
+		}
 	}
+	return true;
+
+	// switch (data.toValidate) {
+	// 	case 'card':
+	// 		for (let gem in data.card.price) {
+	// 			if (data.card.price[gem] > data.resources[gem]) {
+	// 				let diff = data.card.price[gem] - data.resources[gem];
+	// 				if (data.resources.gold >= diff) {
+	// 					data.resources.gold -= diff;
+	// 					data.resources[gem] += diff;
+	// 				} else {
+	// 					return false;
+	// 				}
+	// 			}
+	// 		}
+	// 		return true;
+	// 	case 'noble':
+	// 		for (let gem in data.price) {
+	// 			if (data.price[gem] > data.resources[gem]) {
+	// 				let diff = data.price[gem] - data.resources[gem];
+	// 				if (data.resources.gold >= diff) {
+	// 					data.resources.gold -= diff;
+	// 					data.resources[gem] += diff;
+	// 				} else {
+	// 					return false;
+	// 				}
+	// 			}
+	// 		}
+	// 		return true;
+	// }
 }
 
 var port = process.env.PORT || 3000; // runs on both Azure or local
