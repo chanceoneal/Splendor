@@ -109,20 +109,20 @@ img:hover, .playing-card:hover {
 	width: 30px;	
 }
 
-.price-diamonds {
+.price-diamond {
 	background-color: white;
 	color: black;
 }
 
-.price-sapphires {
+.price-sapphire {
 	background-color: blue;
 }
 
-.price-emeralds {
+.price-emerald {
 	background-color: green;
 }
 
-.price-rubies {
+.price-ruby {
 	background-color: red;
 }
 
