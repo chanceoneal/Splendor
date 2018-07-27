@@ -178,19 +178,22 @@ io.on('connection', (socket) => {
 		socket.broadcast.emit('remove card', data);
 		switch (data.deck) {
 			case 'deck1':
-				if (!data.reserved) {
-					io.emit('display card', 'deck1', deck1.pop());
-				}
+				io.emit('display card', 'deck1', deck1.pop());
+				// if (!data.reserved) {
+				// 	io.emit('display card', 'deck1', deck1.pop());
+				// }
 				break;
 			case 'deck2':
-				if (!data.reserved) {
-					io.emit('display card', 'deck2', deck2.pop());
-				}
+				io.emit('display card', 'deck2', deck2.pop());
+				// if (!data.reserved) {
+				// 	io.emit('display card', 'deck2', deck2.pop());
+				// }
 				break;
 			case 'deck3':
-				if (!data.reserved) {
-					io.emit('display card', 'deck3', deck3.pop());
-				}
+				io.emit('display card', 'deck3', deck3.pop());
+				// if (!data.reserved) {
+				// 	io.emit('display card', 'deck3', deck3.pop());
+				// }
 				break;
 		}
 		if (deckIsEmpty(data.deck)) {
@@ -330,7 +333,6 @@ io.on('connection', (socket) => {
 		tokens[token] += number;
 		totalTokens += number;
 		socket.broadcast.emit('add token to stack', token, number);
-		socket.emit('next turn');
 	});
 
 	/************************************ MISC STUFF ************************************/
@@ -342,6 +344,7 @@ io.on('connection', (socket) => {
 			socket.broadcast.emit('assign noble', qualifiedNobles[0]);
 			noblesInGame.splice(noblesInGame.indexOf(qualifiedNobles[0]), 1);
 		}
+		socket.emit('next turn');
 	});
 
 	socket.on('next turn', () => {
