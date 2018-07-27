@@ -35,15 +35,24 @@ var tokens = {
 	gold: 5,
 };
 var totalTokens = 35;
+var noblesInGame = [];
 var turns = 0;
 var gameInProgress;
+var lastTurn;
+var currentWinnerID;
+var currentWinnerUsername;
+var highestScore;
+var leastCards;
 const NUM_DISPLAY = 4;
 
 io.on('connection', (socket) => {
+	/******************************** GENERAL GAME STUFF ********************************/
 	socket.on('new user', (name) => {
 		socket.username = name;
 		socket.hasTakenGem = false;
 		socket.gemsTaken = [];
+		socket.points = 14;
+		socket.cards = 0;
 		if (players.length === 4 || gameInProgress) {
 			observers.push({
 				id: socket.id,
@@ -67,6 +76,7 @@ io.on('connection', (socket) => {
 	});
 
 	socket.on('disconnect', () => {
+		var points = socket.points;
 		if (players.findIndex(player => player.id === socket.id) === -1 && observers.findIndex(observer => observer.id === socket.id) !== -1) {
 			// Removes the disconnected player from the observers array if they were an observer.
 			observers.splice(observers.findIndex(observer => observer.id === socket.id), 1);
@@ -79,13 +89,17 @@ io.on('connection', (socket) => {
 		if (observers.length > 0) {
 			if (!gameInProgress) {
 				io.to(observers[0].id).emit('enable new game button');
+			} else {
+				observers[0].points = socket.points;
 			}
+
 			players.push(observers.shift());
 		}
 
 		if (players.length <= 1) {
 			turns = 0;
 			gameInProgress = false;
+			lastTurn = false;
 
 			io.emit('clear board');
 			io.emit('enable new game button');
@@ -127,16 +141,22 @@ io.on('connection', (socket) => {
 			io.emit('display token', token, tokens[token]);
 		}
 
-		var noblesToSend = chooseNobles();
-		io.emit('generate nobles', nobleSrc, noblesToSend);
+		noblesInGame = chooseNobles();
+		io.emit('generate nobles', nobleSrc, noblesInGame);
 
 		whoseTurn();
 		gameInProgress = true;
+		lastTurn = false;
+		currentWinnerID = null;
+		currentWinnerUsername = null;
+		highestScore = 0;
+		leastCards = 0;
 		io.emit('disable new game button');
 		io.emit('nobles button', false);
 		io.emit('show board');
 	});
 
+	/************************************ CARD STUFF ************************************/
 	// Factor 'get card' and 'reserve card'
 	socket.on('get card', (data) => {
 		if (isObserver(socket.id)) {
@@ -147,12 +167,13 @@ io.on('connection', (socket) => {
 			socket.emit('alert', 'error', "It's not your turn!");
 			return;
 		}
-
 		if (socket.hasTakenGem) {
 			socket.emit('alert', 'error', "You can't take a card after you've taken a token!");
 			return;
 		}
 
+		socket.points += data.card.points;
+		socket.cards++;
 		socket.emit('get card', data);
 		socket.broadcast.emit('remove card', data);
 		switch (data.deck) {
@@ -175,8 +196,6 @@ io.on('connection', (socket) => {
 		if (deckIsEmpty(data.deck)) {
 			io.emit('deck is empty', data.deck);
 		}
-		// turns++;
-		// whoseTurn();
 	});
 
 	// Factor 'get card' and 'reserve card'
@@ -238,22 +257,36 @@ io.on('connection', (socket) => {
 		if (deckIsEmpty(data.deck)) {
 			io.emit('deck is empty', data.deck);
 		}
-
-		turns++;
-		whoseTurn();
 	});
 
+	socket.on('validate', (data) => {
+		if (isObserver(socket.id)) {
+			socket.emit('alert', 'error', "You cannot do that; you are currently an observer.");
+			return;
+		}
+		if (!isPlayerTurn(socket.id)) {
+			socket.emit('alert', 'error', "It's not your turn!");
+			return;
+		}
+		if (purchaseable(data)) {
+			socket.emit('validated', data);
+		} else {
+			socket.emit('alert', 'error', "You cannot afford this card. To reserve the card, hold the SHIFT key while selecting it.");
+		}
+	});
+
+	/*********************************** TOKEN  STUFF ***********************************/
 	socket.on('get token', (data, double) => {
-		if (isObserver(socket.id)) { 
+		if (isObserver(socket.id)) {
 			// Checks if the player is in the game.
 			socket.emit('alert', 'error', "You cannot do that; you are currently an observer.");
-		} else if (!isPlayerTurn(socket.id)) { 
+		} else if (!isPlayerTurn(socket.id)) {
 			// Checks if it's the players turn.
 			socket.emit('alert', 'error', "It's not your turn!");
-		} else if (data.token === 'gold') { 
+		} else if (data.token === 'gold') {
 			// Prevents player from taking tokens from the gold stack.
 			socket.emit('alert', 'error', "You can't take from the gold stack.");
-		} else if (tokens[data.token] === 0) { 
+		} else if (tokens[data.token] === 0) {
 			// If the stack is empty, the player can't take from it (shouldn't ever be emitted).
 			socket.emit('alert', 'info', 'This token stack is empty.');
 		} else if ((tokens[data.token] < 4 && double) || (tokens[data.token] < 3 && socket.gemsTaken.length === 1 && socket.gemsTaken.includes(data.token))) { // Prevents the player from taking 2 tokens from a stack with <4 tokens.
@@ -277,22 +310,19 @@ io.on('connection', (socket) => {
 			socket.gemsTaken.length = 0;
 			socket.emit('get token', data.token, false, true);
 			socket.broadcast.emit('remove token from stack', data.token);
-		} else { 
+		} else {
 			// Allows the player to take a token and determines if the player's turn is over.
 			tokens[data.token]--;
 			totalTokens--;
+			
 			socket.gemsTaken.push(data.token);
-			socket.hasTakenGem = socket.gemsTaken.length !== 3;
-			socket.emit('get token', data.token, false, socket.gemsTaken.length === 3);
+			socket.hasTakenGem = socket.gemsTaken.length < 3;
+			socket.emit('get token', data.token, false, (socket.gemsTaken.length >= 3) || (totalTokens === 0));
 			socket.broadcast.emit('remove token from stack', data.token);
-			socket.gemsTaken.length = socket.gemsTaken.length === 3 ? 0 : socket.gemsTaken.length;
-		}
-
-		if (totalTokens === 0) {
-			socket.hasTakenGem = false;
-			socket.gemsTaken.length = 0;
-			turns++;
-			whoseTurn();
+			if (totalTokens === 0 || socket.gemsTaken.length >= 3) {
+				socket.gemsTaken.length = 0;
+				socket.hasTakenGem = false;
+			}
 		}
 	});
 
@@ -300,30 +330,119 @@ io.on('connection', (socket) => {
 		tokens[token] += number;
 		totalTokens += number;
 		socket.broadcast.emit('add token to stack', token, number);
+		socket.emit('next turn');
 	});
 
-	socket.on('validate', (data) => {
-		if (isObserver(socket.id)) {
-			socket.emit('alert', 'error', "You cannot do that; you are currently an observer.");
-			return;
-		}
-		if (!isPlayerTurn(socket.id)) {
-			socket.emit('alert', 'error', "It's not your turn!");
-			return;
-		}
-		if (purchaseable(data)) {
-			socket.emit('validated', data);
-		} else {
-			socket.emit('alert', 'error', "You cannot afford this card. To reserve the card, hold the SHIFT key while selecting it.");
+	/************************************ MISC STUFF ************************************/
+	socket.on('check nobles', (cards) => {
+		let qualifiedNobles = checkNobles(cards);
+		if (qualifiedNobles.length !== 0) {
+			socket.points += 3;
+			socket.emit('get noble', qualifiedNobles[0]);
+			socket.broadcast.emit('assign noble', qualifiedNobles[0]);
+			noblesInGame.splice(noblesInGame.indexOf(qualifiedNobles[0]), 1);
 		}
 	});
 
 	socket.on('next turn', () => {
 		turns++;
-		whoseTurn();
+		if (!lastTurn) {
+			if (socket.points >= 15) {
+				lastTurn = true;
+				currentWinnerID = socket.id;
+				currentWinnerUsername = socket.username;
+				highestScore = socket.points;
+				leastCards = socket.cards;
+
+				if (turns % players.length === 0) {
+					socket.emit('alert', 'success', 'Congratulations! You won!');
+					socket.broadcast.emit('alert', 'error', `You lost... ${socket.username} won! Better luck next time.`);
+					gameOver();
+				} else {
+					socket.emit('alert', 'info', `You are currently in the lead with ${socket.points} points. Other players may be able to overtake you, so don't get your hopes up!`);
+					socket.broadcast.emit('alert', 'warning', `${socket.username} has ${socket.points} points. You may or may not get a chance to catch up, depending on where you are in the turn queue.`);
+					whoseTurn();
+				}
+			} else {
+				whoseTurn();
+			}
+		} else if (turns % players.length > 0) {
+			if (socket.points > highestScore) {
+				currentWinnerID = socket.id;
+				currentWinnerUsername = socket.username;
+				highestScore = socket.points;
+				leastCards = socket.cards;
+				socket.emit('alert', 'info', `You are currently in the lead with ${socket.points} points. Other players may be able to overtake you, so don't get your hopes up!`);
+				socket.broadcast.emit('alert', 'warning', `${socket.username} has taken the lead with ${socket.points} points. You may or may not get a chance to catch up, depending on where you are in the turn queue.`);
+			} else if (socket.points === highestScore) {
+				if (socket.cards > leastCards) {
+					socket.emit('alert', 'warning', 'You have more cards than the other player with the same amount of points. Therefore you are not in the lead.');
+				} else if (socket.cards < leastCards) {
+					socket.emit('alert', 'info', `You have taken over the lead with ${socket.points} points and ${leastCards - socket.cards} fewer cards than the previous leader. Other players may be able to overtake you, so don't get your hopes up!`);
+					socket.broadcast.emit('alert', 'warning', `${socket.username} has taken the lead with ${socket.points} points and ${leastCards - socket.cards} fewer cards than the previous leader.`);
+					currentWinnerID = socket.id;
+					currentWinnerUsername = socket.username;
+					leastCards = socket.cards;
+				} else {
+					socket.emit('alert', 'warning', `Although you have the same number of points and cards as the leader, they hit the lead before you so they are still in the lead.`);
+				}
+			}
+			whoseTurn();
+		} else if (turns % players.length === 0) {
+			io.to(currentWinnerID).emit('alert', 'success', 'Congratulations! You won!');
+			for (let i = 0; i < players.length; i++) {
+				if (players[i].id !== currentWinnerID) {
+					io.to(players[i].id).emit('alert', 'error', `You lost... ${currentWinnerUsername} won! Better luck next time.`);
+				}
+			}
+			gameOver();
+		}
 	});
 });
 
+
+/******************************* FUNCTIONS OUTSIDE SOCKET.IO *******************************/
+
+/************************************ GENERAL GAME STUFF ***********************************/
+function chooseNobles() {
+	var tempArray = nobles.slice();
+	var returnArray = [];
+	for (let i = 0; i < players.length + 1; i++) {
+		let j = Math.floor(Math.random() * tempArray.length);
+		let noble = tempArray[j];
+		returnArray.push({
+			name: noble,
+			price: nobleJSON[noble]
+		});
+		tempArray.splice(j, 1);
+	}
+	return returnArray;
+}
+
+function whoseTurn() {
+	var player = players[turns % players.length];
+	io.to(player.id).emit('notify');
+}
+
+function isPlayerTurn(id) {
+	return id === players[turns % players.length].id;
+}
+
+function isObserver(id) {
+	return observers.find(observer => observer.id === id) !== undefined;
+}
+
+function gameOver() {
+	turns = 0;
+	gameInProgress = false;
+	checkTokens(true);
+	io.emit('clear board');
+	io.emit('enable new game button');
+	io.emit('nobles button', true);
+	io.emit('clear nobles');
+}
+
+/**************************************** CARD STUFF ***************************************/
 function createDecks() {
 	var card;
 
@@ -409,67 +528,19 @@ function shuffle() {
 	}
 }
 
-function checkTokens(reset) {
-	if (reset) {
-		tokens = {
-			diamond: 7,
-			sapphire: 7,
-			emerald: 7,
-			ruby: 7,
-			onyx: 7,
-			gold: 5
-		};
-		totalTokens = 35;
-		return;
-	}
-	if (players.length === 3) {
-		for (let gem in tokens) {
-			if (gem !== 'gold') {
-				tokens[gem] -= 2;
-				totalTokens -= 2;
+function checkNobles(cards) {
+	let qualifiedNobles = [];
+	for (let i = 0; i < noblesInGame.length; i++) {
+		ADD: {
+			for (let price in noblesInGame[i].price) {
+				if (cards[price] < noblesInGame[i].price[price]) {
+					break ADD;
+				}
 			}
-		}
-	} else if (players.length === 2) {
-		for (let gem in tokens) {
-			if (gem !== 'gold') {
-				tokens[gem] -= 3;
-				totalTokens -= 3;
-			}
+			qualifiedNobles.push(noblesInGame[i]);
 		}
 	}
-}
-
-function chooseNobles() {
-	var tempArray = nobles.slice();
-	var returnArray = [];
-	for (let i = 0; i < players.length + 1; i++) {
-		let j = Math.floor(Math.random() * tempArray.length);
-		let noble = tempArray[j];
-		returnArray.push({
-			name: noble,
-			price: nobleJSON[noble]
-		});
-		tempArray.splice(j, 1);
-	}
-	return returnArray;
-}
-
-function whoseTurn() {
-	var player = players[turns % players.length];
-	// io.emit('message', player.username + "'s turn.");
-	// io.emit('disable new game button');
-	// io.emit('disable draw buttons');
-	// io.emit('hide drawTotal button');
-	// io.to(player.id).emit('enable draw buttons');
-	io.to(player.id).emit('notify');
-}
-
-function isPlayerTurn(id) {
-	return id === players[turns % players.length].id;
-}
-
-function isObserver(id) {
-	return observers.find(observer => observer.id === id) !== undefined;
+	return qualifiedNobles;
 }
 
 function purchaseable(data) {
@@ -515,6 +586,39 @@ function purchaseable(data) {
 	// 		return true;
 	// }
 }
+
+/*************************************** TOKEN  STUFF **************************************/
+function checkTokens(reset) {
+	if (reset) {
+		tokens = {
+			diamond: 7,
+			sapphire: 7,
+			emerald: 7,
+			ruby: 7,
+			onyx: 7,
+			gold: 5
+		};
+		totalTokens = 35;
+		return;
+	}
+	if (players.length === 3) {
+		for (let gem in tokens) {
+			if (gem !== 'gold') {
+				tokens[gem] -= 2;
+				totalTokens -= 2;
+			}
+		}
+	} else if (players.length === 2) {
+		for (let gem in tokens) {
+			if (gem !== 'gold') {
+				tokens[gem] -= 3;
+				totalTokens -= 3;
+			}
+		}
+	}
+}
+
+/*******************************************************************************************/
 
 var port = process.env.PORT || 3000; // runs on both Azure or local
 http.listen(port, () => {
