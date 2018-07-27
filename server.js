@@ -51,7 +51,7 @@ io.on('connection', (socket) => {
 		socket.username = name;
 		socket.hasTakenGem = false;
 		socket.gemsTaken = [];
-		socket.points = 14;
+		socket.points = 0;
 		socket.cards = 0;
 		if (players.length === 4 || gameInProgress) {
 			observers.push({
