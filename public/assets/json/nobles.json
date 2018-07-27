@@ -1,72 +1,47 @@
 {
 	"Anne_of_Brittany": {
-		"diamonds": 3,
-		"sapphires": 3,
-		"emeralds": 3,
-		"rubies": 0,
-		"onyx": 0
+		"diamond": 3,
+		"sapphire": 3,
+		"emerald": 3
 	},
 	"Catherine_de_Medici": {
-		"diamonds": 0,
-		"sapphires": 3,
-		"emeralds": 3,
-		"rubies": 3,
-		"onyx": 0
+		"sapphire": 3,
+		"emerald": 3,
+		"ruby": 3
 	},
 	"Charles_V": {
-		"diamonds": 3,
-		"sapphires": 0,
-		"emeralds": 0,
-		"rubies": 3,
+		"diamond": 3,
+		"ruby": 3,
 		"onyx": 3
 	},
 	"Elisabeth_of_Austria": {
-		"diamonds": 3,
-		"sapphires": 3,
-		"emeralds": 0,
-		"rubies": 0,
+		"diamond": 3,
+		"sapphire": 3,
 		"onyx": 3
 	},
 	"Francis_I_of_France": {
-		"diamonds": 0,
-		"sapphires": 0,
-		"emeralds": 3,
-		"rubies": 3,
+		"emerald": 3,
+		"ruby": 3,
 		"onyx": 3
 	},
 	"Henry_VIII": {
-		"diamonds": 0,
-		"sapphires": 0,
-		"emeralds": 0,
-		"rubies": 4,
+		"ruby": 4,
 		"onyx": 4
 	},
 	"Isabella_I_of_Castille": {
-		"diamonds": 4,
-		"sapphires": 0,
-		"emeralds": 0,
-		"rubies": 0,
+		"diamond": 4,
 		"onyx": 4
 	},
 	"Mary_Stuart": {
-		"diamonds": 0,
-		"sapphires": 0,
-		"emeralds": 4,
-		"rubies": 4,
-		"onyx": 0
+		"emerald": 4,
+		"ruby": 4
 	},
 	"Niccolo_Machiavelli": {
-		"diamonds": 4,
-		"sapphires": 4,
-		"emeralds": 0,
-		"rubies": 0,
-		"onyx": 0
+		"diamond": 4,
+		"sapphire": 4
 	},
 	"Suleiman_the_Magnificent": {
-		"diamonds": 0,
-		"sapphires": 4,
-		"emeralds": 4,
-		"rubies": 0,
-		"onyx": 0
+		"sapphire": 4,
+		"emerald": 4
 	}
 }

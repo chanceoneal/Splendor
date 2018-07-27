@@ -4,10 +4,10 @@
 			"type": "emerald",
 			"points": 0,
 			"price": {
-				"diamonds": 2,
-				"sapphires": 1,
-				"emeralds": 0,
-				"rubies": 0,
+				"diamond": 2,
+				"sapphire": 1,
+				"emerald": 0,
+				"ruby": 0,
 				"onyx": 0
 			}
 		},
@@ -15,10 +15,10 @@
 			"type": "emerald",
 			"points": 0,
 			"price": {
-				"diamonds": 0,
-				"sapphires": 2,
-				"emeralds": 0,
-				"rubies": 2,
+				"diamond": 0,
+				"sapphire": 2,
+				"emerald": 0,
+				"ruby": 2,
 				"onyx": 0
 			}
 		},
@@ -26,10 +26,10 @@
 			"type": "emerald",
 			"points": 0,
 			"price": {
-				"diamonds": 1,
-				"sapphires": 3,
-				"emeralds": 1,
-				"rubies": 0,
+				"diamond": 1,
+				"sapphire": 3,
+				"emerald": 1,
+				"ruby": 0,
 				"onyx": 0
 			}
 		},
@@ -37,10 +37,10 @@
 			"type": "emerald",
 			"points": 0,
 			"price": {
-				"diamonds": 1,
-				"sapphires": 1,
-				"emeralds": 0,
-				"rubies": 1,
+				"diamond": 1,
+				"sapphire": 1,
+				"emerald": 0,
+				"ruby": 1,
 				"onyx": 1
 			}
 		},
@@ -48,10 +48,10 @@
 			"type": "emerald",
 			"points": 0,
 			"price": {
-				"diamonds": 1,
-				"sapphires": 1,
-				"emeralds": 0,
-				"rubies": 1,
+				"diamond": 1,
+				"sapphire": 1,
+				"emerald": 0,
+				"ruby": 1,
 				"onyx": 2
 			}
 		},
@@ -59,10 +59,10 @@
 			"type": "emerald",
 			"points": 0,
 			"price": {
-				"diamonds": 0,
-				"sapphires": 1,
-				"emeralds": 2,
-				"rubies": 0,
+				"diamond": 0,
+				"sapphire": 1,
+				"emerald": 2,
+				"ruby": 0,
 				"onyx": 2
 			}
 		},
@@ -70,10 +70,10 @@
 			"type": "emerald",
 			"points": 0,
 			"price": {
-				"diamonds": 0,
-				"sapphires": 0,
-				"emeralds": 0,
-				"rubies": 3,
+				"diamond": 0,
+				"sapphire": 0,
+				"emerald": 0,
+				"ruby": 3,
 				"onyx": 0
 			}
 		},
@@ -81,10 +81,10 @@
 			"type": "emerald",
 			"points": 1,
 			"price": {
-				"diamonds": 0,
-				"sapphires": 0,
-				"emeralds": 0,
-				"rubies": 0,
+				"diamond": 0,
+				"sapphire": 0,
+				"emerald": 0,
+				"ruby": 0,
 				"onyx": 4
 			}
 		}
@@ -94,10 +94,10 @@
 			"type": "emerald",
 			"points": 1,
 			"price": {
-				"diamonds": 3,
-				"sapphires": 0,
-				"emeralds": 2,
-				"rubies": 3,
+				"diamond": 3,
+				"sapphire": 0,
+				"emerald": 2,
+				"ruby": 3,
 				"onyx": 0
 			}
 		},
@@ -105,10 +105,10 @@
 			"type": "emerald",
 			"points": 1,
 			"price": {
-				"diamonds": 2,
-				"sapphires": 3,
-				"emeralds": 0,
-				"rubies": 0,
+				"diamond": 2,
+				"sapphire": 3,
+				"emerald": 0,
+				"ruby": 0,
 				"onyx": 2
 			}
 		},
@@ -116,10 +116,10 @@
 			"type": "emerald",
 			"points": 2,
 			"price": {
-				"diamonds": 4,
-				"sapphires": 2,
-				"emeralds": 0,
-				"rubies": 0,
+				"diamond": 4,
+				"sapphire": 2,
+				"emerald": 0,
+				"ruby": 0,
 				"onyx": 1
 			}
 		},
@@ -127,10 +127,10 @@
 			"type": "emerald",
 			"points": 2,
 			"price": {
-				"diamonds": 0,
-				"sapphires": 0,
-				"emeralds": 5,
-				"rubies": 0,
+				"diamond": 0,
+				"sapphire": 0,
+				"emerald": 5,
+				"ruby": 0,
 				"onyx": 0
 			}
 		},
@@ -138,10 +138,10 @@
 			"type": "emerald",
 			"points": 2,
 			"price": {
-				"diamonds": 0,
-				"sapphires": 5,
-				"emeralds": 3,
-				"rubies": 0,
+				"diamond": 0,
+				"sapphire": 5,
+				"emerald": 3,
+				"ruby": 0,
 				"onyx": 0
 			}
 		},
@@ -149,10 +149,10 @@
 			"type": "emerald",
 			"points": 3,
 			"price": {
-				"diamonds": 0,
-				"sapphires": 0,
-				"emeralds": 6,
-				"rubies": 0,
+				"diamond": 0,
+				"sapphire": 0,
+				"emerald": 6,
+				"ruby": 0,
 				"onyx": 0
 			}
 		}
@@ -162,10 +162,10 @@
 			"type": "emerald",
 			"points": 3,
 			"price": {
-				"diamonds": 5,
-				"sapphires": 3,
-				"emeralds": 0,
-				"rubies": 3,
+				"diamond": 5,
+				"sapphire": 3,
+				"emerald": 0,
+				"ruby": 3,
 				"onyx": 3
 			}
 		},
@@ -173,10 +173,10 @@
 			"type": "emerald",
 			"points": 4,
 			"price": {
-				"diamonds": 3,
-				"sapphires": 6,
-				"emeralds": 3,
-				"rubies": 0,
+				"diamond": 3,
+				"sapphire": 6,
+				"emerald": 3,
+				"ruby": 0,
 				"onyx": 0
 			}
 		},
@@ -184,10 +184,10 @@
 			"type": "emerald",
 			"points": 4,
 			"price": {
-				"diamonds": 0,
-				"sapphires": 7,
-				"emeralds": 0,
-				"rubies": 0,
+				"diamond": 0,
+				"sapphire": 7,
+				"emerald": 0,
+				"ruby": 0,
 				"onyx": 0
 			}
 		},
@@ -195,10 +195,10 @@
 			"type": "emerald",
 			"points": 5,
 			"price": {
-				"diamonds": 0,
-				"sapphires": 7,
-				"emeralds": 3,
-				"rubies": 0,
+				"diamond": 0,
+				"sapphire": 7,
+				"emerald": 3,
+				"ruby": 0,
 				"onyx": 0
 			}
 		}

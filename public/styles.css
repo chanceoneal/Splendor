@@ -32,7 +32,6 @@ img:hover, .playing-card:hover {
 	margin-top: 85px;
 }
 
-
 .gem {
 	text-align: right;
 }
@@ -43,6 +42,7 @@ img:hover, .playing-card:hover {
 }
 
 .playing-card {
+	border: 1px solid black;
 	border-radius: 10px;
 	height: 200px;
 	padding: 5px 10px 10px 10px;
@@ -52,33 +52,44 @@ img:hover, .playing-card:hover {
 
 /* Diamond Playing Card */
 .diamond {
-	background-image: url("/assets/backgrounds/diamond_bg.jpg");
+	/* background-image: url("/assets/backgrounds/diamond_bg.jpg"); */
+	background-color: navajowhite;
 }
 
 /* Sapphire Playing Card */
 .sapphire {
-	background-image: url("/assets/backgrounds/sapphire_bg.jpg");
+	/* background-image: url("/assets/backgrounds/sapphire_bg.jpg"); */
+	background-color: royalblue;
 }
 
 /* Emerald Playing Card */
 .emerald {
-	background-image: url("/assets/backgrounds/emerald_bg.jpg");
+	/* background-image: url("/assets/backgrounds/emerald_bg.jpg"); */
+	background-color: darkseagreen;
 }
 
 /* Ruby Playing Card */
 .ruby {
-	background-image: url("/assets/backgrounds/ruby_bg.jpg");
+	/* background-image: url("/assets/backgrounds/ruby_bg.jpg"); */
+	background-color: indianred;
 }
 
 /* Onyx Playing Card */
 .onyx {
-	background-image: url("/assets/backgrounds/onyx_bg.jpg");
+	/* background-image: url("/assets/backgrounds/onyx_bg.jpg"); */
+	background-color: saddlebrown;
 }
 
 /* Playing Card Back */
 .pcb {
 	background-color: blue;
 	color: white;
+}
+
+/* Empty Deck */
+.empty {
+	background-color: whitesmoke;
+	color: black;
 }
 
 .points {
@@ -98,20 +109,20 @@ img:hover, .playing-card:hover {
 	width: 30px;	
 }
 
-.price-diamonds {
+.price-diamond {
 	background-color: white;
 	color: black;
 }
 
-.price-sapphires {
+.price-sapphire {
 	background-color: blue;
 }
 
-.price-emeralds {
+.price-emerald {
 	background-color: green;
 }
 
-.price-rubies {
+.price-ruby {
 	background-color: red;
 }
 
@@ -127,6 +138,52 @@ span {
 .top {
 	display: flow-root;
 	margin-bottom: 8px;
+}
+
+/* Token Styling */
+#tokensInHand {
+	height: 140px;
+}
+
+#goldTokens, #diamondTokens, #sapphireTokens, #emeraldTokens, #rubyTokens, #onyxTokens {
+	height: 105px;
+	opacity: 1; /* Change to 0.25 when token pile is empty */
+	padding-bottom: 5px;
+}
+
+.token {
+	border: 3px solid;
+	border-radius: 50px;
+}
+
+.gold-token {
+	border-color: darkgoldenrod;
+	background-color: palegoldenrod;
+}
+
+.diamond-token {
+	border-color: antiquewhite; /* navajowhite? */
+	background-color: whitesmoke;
+}
+
+.sapphire-token {
+	border-color: blue;
+	background-color: cornflowerblue;
+}
+
+.emerald-token {
+	border-color: green;
+	background-color: darkseagreen;
+}
+
+.ruby-token {
+	border-color: red;
+	background-color: indianred;
+}
+
+.onyx-token {
+	border-color: brown;
+	background-color: rosybrown;
 }
 
 /*

@@ -4,7 +4,7 @@
   "description": "The dynamic game of Splendor in all its... glory!",
   "main": "server.js",
   "scripts": {
-    "test": "splendor-test"
+    "start": "node server.js"
   },
   "repository": {
     "type": "git",
@@ -28,6 +28,6 @@
     "xmlhttprequest": "^1.8.0"
   },
   "devDependencies": {
-    "nodemon": "^1.17.2"
+    "nodemon": "^1.18.1"
   }
 }
