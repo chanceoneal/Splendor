@@ -272,7 +272,6 @@ $(() => {
 				getCard(card, true);
 				cards.reserved++;
 		}
-		// displayCard(null, card, true);
 	});
 
 	socket.on('validated', (data) => {
@@ -325,6 +324,15 @@ $(() => {
 					"margin-left": `${margins * 5}px`,
 					"position": 'absolute'
 				}).mouseenter(bringToFront).mouseleave(sendToBack));
+
+		if (reserved) {
+			$(`[json='${JSON.stringify(card)}']`).children().unbind("click").click({
+				src: 'card',
+				card: card,
+				resources: resources,
+				reserved: reserved
+			}, validateCard);
+		}
 	}
 
 	function reserveCard(event) {
@@ -389,7 +397,7 @@ $(() => {
 	 * @param {object} event - Object representing the card to be validated.
 	 */
 	function validateCard(event) {
-		if (event.shiftKey) {
+		if (event.shiftKey && !event.data.reserved) {
 			reserveCard(event);
 			// socket.emit('reserve card', event.data);
 		} else {
@@ -466,17 +474,17 @@ $(() => {
 	});
 
 	function addTokenToStack(token) {
-			let offset = parseInt($(`#${token}Tokens div:last-child`).css('margin-left'));
-			let tokenDiv = $(`#${token}Tokens`);
-			let imgDiv = $('<div></div>').css({
-				'position': 'absolute',
-				'margin-left': `${offset + 5}px`
-			}).append($(`<img src='/assets/gems/${token}.png' width='100' height='100'>`)
-				.addClass(`token ${token}-token`)
-				.click({
-					token: token
-				}, getToken));
-			tokenDiv.append(imgDiv);
+		let offset = parseInt($(`#${token}Tokens div:last-child`).css('margin-left'));
+		let tokenDiv = $(`#${token}Tokens`);
+		let imgDiv = $('<div></div>').css({
+			'position': 'absolute',
+			'margin-left': `${offset + 5}px`
+		}).append($(`<img src='/assets/gems/${token}.png' width='100' height='100'>`)
+			.addClass(`token ${token}-token`)
+			.click({
+				token: token
+			}, getToken));
+		tokenDiv.append(imgDiv);
 	}
 
 	function removeTokensFromHand(tokensToRemove, amounts) {
@@ -496,9 +504,9 @@ $(() => {
 
 		if ($('#tokensModal').hasClass('show')) {
 			$('#tokensModal').modal('hide');
-			// socket.emit('next turn');
+			socket.emit('next turn');
 		}
-		
+
 	}
 
 	function chooseTokensToRemove(number) {
@@ -543,7 +551,7 @@ $(() => {
 	socket.on('next turn', () => {
 		socket.emit('next turn');
 	});
-	
+
 	socket.on('get noble', (noble) => {
 		$(`img[name='${noble.name}']`).parent().append($(`<h6>Taken by ${username}</h6>`));
 		score += 3;
