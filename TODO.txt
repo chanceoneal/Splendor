@@ -1,5 +1,10 @@
-* Keep track of tokens when removed
-* Add ability to reserve displayed cards
-	** With that, adjust the current functionality to use the same function for reserving from the deck or displayed cards
-* Check for noble visits after each purchased card
-* 
+* Append owner of noble to noble div for every person		$$$
+* Empty token modal after each use							$$$
+* Should I simply end a game when someone disconnects?
+
+
+Next turn:
+* When a player reserves a card												  $$$
+* When a player buys a card (and after possibly getting a visit from a noble) $$$
+* When a player takes their last possible token								  $$$
+* When a player removes all tokens over 10 tokens							  $$$
