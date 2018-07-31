@@ -1,5 +1,6 @@
 body {
 	font-family: "Playfair Display SC", serif !important;
+	background-color: burlywood !important; 
 }
 
 .background-image {
@@ -7,8 +8,25 @@ body {
 	width: 66%;
 }
 
+.centered {
+	height: 100vh;
+}
+
 img:hover, .playing-card:hover {
 	cursor: pointer;
+}
+
+#messageInput {
+	padding-bottom: 25px;
+}
+
+#messages {
+	max-height: 350px;
+	overflow: auto;
+}
+
+#messages li:nth-child(even) {
+	background: #eee;
 }
 
 .page-header {
@@ -16,14 +34,41 @@ img:hover, .playing-card:hover {
 	padding: 10px;
 }
 
+.modal-body.row {
+	margin: 0px;
+}
+
 .row {
 	margin-top: 10px;
 }
 
-.top-right {
-	position: absolute !important;
+#questions {
+	width: 100%;
+}
+
+.top-left-corner {
+	left: 10px;
+	top: 10px;
+}
+
+.lower-top-left-corner {
+	left: 10px;
+	top: 60px;
+}
+
+.top-right-corner {
 	right: 10px;
-	top: 29px;
+	top: 10px;
+	
+}
+
+.top-right-corner, .top-left-corner, .lower-top-left-corner {
+	background-color: #6c757d;
+	border-radius: 5px;
+	box-shadow: 5px 5px #888888;
+	position: fixed;
+	width: 50px;
+	z-index: 100;
 }
 
 
