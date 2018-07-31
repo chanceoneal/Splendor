@@ -12,35 +12,53 @@
 		<link href="https://fonts.googleapis.com/css?family=IBM+Plex+Mono|Playfair+Display+SC" rel="stylesheet">
 		<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css" integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm"
 		 crossorigin="anonymous">
+		<link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.0.8/css/all.css" integrity="sha384-3AB7yXWz4OeoZcPbieVW64vVXEwADiYyAEhwilzWsLw+9FgqpyjjStpPnpBO8o8S"
+		 crossorigin="anonymous">
+		<!-- Scripts -->
+		<script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/2.0.4/socket.io.js"></script>
+		<script src="https://code.jquery.com/jquery-3.2.1.slim.min.js" integrity="sha384-KJ3o2DKtIkvYIK3UENzmM7KCkRr/rE9/Qpg6aAZGJwFDMVNA/GpGFF93hXpG5KkN"
+		 crossorigin="anonymous"></script>
+		<script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js" integrity="sha384-ApNbgh9B+Y1QKtv3Rn7W3mgPxhU9K/ScQsAP7hUibX39j7fakFPskvXusvfa0b4Q"
+		 crossorigin="anonymous"></script>
+		<script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js" integrity="sha384-JZR6Spejh4U02d8jOt6vLEHfe/JQGiRRSQQxSfFWpi1MquVdAyjUar5+76PVCmYl"
+		 crossorigin="anonymous"></script>
+		<script src="https://cdnjs.cloudflare.com/ajax/libs/limonte-sweetalert2/6.11.0/sweetalert2.all.min.js"></script>
 
 	</head>
 
 	<body>
-		<div class="page-header text-center">
-			<!-- <div class="col-md-2">
-				<p>
-					Your Points: <span></span>
-				</p>
-			</div> -->
-			<!-- <div class="col-md-auto"> -->
-				<h1>Splendor</h1>
-				<span>
-					<a href="/assets/Rules_Splendor_US.pdf" target="_blank">Rules</a>
-				</span>
-			<!-- </div> -->
-			<!-- <div class="col-md-2">
-				<div class="btn-group" role="group">
+
+		<div class="top-left-corner text-center">
+			<button id="showOnline" class="btn btn-secondary" data-toggle="modal" data-target="#onlineModal">
+				<i class="fa fa-users"></i>
+			</button>
+		</div>
+
+		<div class="lower-top-left-corner text-center">
+			<button id="showChat" class="btn btn-secondary" data-toggle="modal" data-target="#chatModal">
+				<i class="fas fa-comments"></i>
+			</button>
+		</div>
+
+		<div class="top-right-corner text-center">
+			<button id="questions" class="btn btn-secondary" data-toggle="modal" data-target="#questionsModal">
+				<i class="fas fa-question"></i>
+			</button>
+		</div>
+
+		<div id="greeting" class="d-flex align-items-center centered">
+			<div class="container-fluid">
+				<div class="row justify-content-center">
+					<h1>Splendor</h1>
+				</div>
+				<div class="row justify-content-center">
 					<button type="button" class="btn btn-primary" id="newGame">New Game</button>
 					<button type="button" class="btn btn-info" id="showNobles" data-toggle="modal" data-target="#noblesModal" hidden>Show Nobles</button>
 				</div>
-			</div> -->
+			</div>
 		</div>
 
-		<div class="btn-group top-right" role="group">
-			<button type="button" class="btn btn-primary" id="newGame">New Game</button>
-			<button type="button" class="btn btn-info" id="showNobles" data-toggle="modal" data-target="#noblesModal" hidden>Show Nobles</button>
-		</div>
-		<div class="container-fluid">
+		<div id="gameArea" class="container-fluid" hidden>
 			<div class="row justify-content-md-center">
 				<!-- Deck Container -->
 				<div id="cards" class="col-md-10 text-center" hidden>
@@ -104,60 +122,59 @@
 					</div>
 				</div>
 			</div>
-			<!-- <div class="row"> -->
 			<div id="tokensInHand" class="row text-center">
 				<div id="diamondtih" class="col">
-					
+
 				</div>
 				<div id="sapphiretih" class="col">
-					
+
 				</div>
 				<div id="emeraldtih" class="col">
-					
+
 				</div>
 				<div id="rubytih" class="col">
-					
+
 				</div>
 				<div id="onyxtih" class="col">
-					
+
 				</div>
 				<div id="goldtih" class="col">
-					
+
 				</div>
 			</div>
 			<div id="cardsInHand" class="row text-center">
 				<div id="diamondcih" class="col">
-					
+
 				</div>
 				<div id="sapphirecih" class="col">
-					
+
 				</div>
 				<div id="emeraldcih" class="col">
-					
+
 				</div>
 				<div id="rubycih" class="col">
-					
+
 				</div>
 				<div id="onyxcih" class="col">
-					
+
 				</div>
 				<div id="reservedcih" class="col">
-					
+
 				</div>
 			</div>
-			<!-- </div> -->
 		</div>
 
-		<div class="modal fade" id="noblesModal" tabindex="-1" role="dialog" aria-labelledby="nobleLabel" aria-hidden="true">
+		<!-- Modals -->
+		<div id="noblesModal" class="modal fade" tabindex="-1" role="dialog" aria-labelledby="nobleLabel" aria-hidden="true">
 			<div class="modal-dialog modal-dialog-centered modal-lg" role="document">
 				<div class="modal-content">
 					<div class="modal-header">
-						<h3 class="modal-title" id="nobleLabel">
+						<h5 class="modal-title" id="nobleLabel">
 							<strong>Nobles</strong>
-							</h5>
-							<button type="button" class="close" data-dismiss="modal" aria-label="Close">
-								<span aria-hidden="true">&times;</span>
-							</button>
+						</h5>
+						<button type="button" class="close" data-dismiss="modal" aria-label="Close">
+							<span aria-hidden="true">&times;</span>
+						</button>
 					</div>
 					<div class="modal-body">
 						<div id="nobles" class="row no-gutters justify-content-md-center">
@@ -171,13 +188,13 @@
 			</div>
 		</div>
 
-		<div class="modal fade" id="tokensModal" tabindex="-1" role="dialog" aria-labelledby="tokenLabel" aria-hidden="true">
+		<div id="tokensModal" class="modal fade" tabindex="-1" role="dialog" aria-labelledby="tokenLabel" aria-hidden="true">
 			<div class="modal-dialog modal-dialog-centered modal-lg" role="document">
 				<div class="modal-content">
 					<div class="modal-header text-center">
-						<h3 class="modal-title" id="tokenLabel">
+						<h5 class="modal-title" id="tokenLabel">
 							<strong>Remove Tokens</strong>
-						</h3>
+						</h5>
 					</div>
 					<div class="modal-body">
 						<div id="tokensToRemove" class="row no-gutters justify-content-md-center">
@@ -190,16 +207,86 @@
 				</div>
 			</div>
 		</div>
-		
-		<script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/2.0.4/socket.io.js"></script>
-		<script src="https://code.jquery.com/jquery-3.2.1.slim.min.js" integrity="sha384-KJ3o2DKtIkvYIK3UENzmM7KCkRr/rE9/Qpg6aAZGJwFDMVNA/GpGFF93hXpG5KkN"
-		 crossorigin="anonymous"></script>
-		<script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js" integrity="sha384-ApNbgh9B+Y1QKtv3Rn7W3mgPxhU9K/ScQsAP7hUibX39j7fakFPskvXusvfa0b4Q"
-		 crossorigin="anonymous"></script>
-		<script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js" integrity="sha384-JZR6Spejh4U02d8jOt6vLEHfe/JQGiRRSQQxSfFWpi1MquVdAyjUar5+76PVCmYl"
-		 crossorigin="anonymous"></script>
-		<script src="https://cdnjs.cloudflare.com/ajax/libs/limonte-sweetalert2/6.11.0/sweetalert2.all.min.js"></script>
 
+		<div id="questionsModal" class="modal fade" tabindex="-1" role="dialog" aria-labelledby="questionsLabel" aria-hidden="true">
+			<div class="modal-dialog modal-dialog-centered" role="document">
+				<div class="modal-content">
+					<div class="modal-header">
+						<h5 id="questionsLabel" class="modal-title">
+							<strong>Game Information</strong>
+						</h5>
+						<button type="button" class="close" data-dismiss="modal" aria-label="Close">
+							<span aria-hidden="true">&times;</span>
+						</button>
+					</div>
+					<div class="modal-body">
+						<ul class="modal-list">
+							<li>If you've never played, or just need a refresher on the rules, look
+								<a href="/assets/Rules_Splendor_US.pdf" target="_blank">here</a>!</li>
+							<li>To reserve a card, hold shift while clicking on the card.</li>
+							<li>To take two tokens at once, hold shift and click on the tokens. Alternatively, you can simply click on the token stack
+								twice.</li>
+							<li>If you're a player and you disconnect, the game will end for everyone else. So don't do that. Don't be a quitter.</li>
+							<li>Questions? Comments? Suggestions? Browse the issues on our
+								<a href="https://github.com/chanceoneal/Splendor/issues" rel="author" target="_blank">Github</a>.</li>
+						</ul>
+					</div>
+				</div>
+			</div>
+		</div>
+
+		<div id="onlineModal" class="modal fade" tabindex="-1" role="dialog" aria-labelledby="onlineLabel" aria-hidden="true">
+			<div class="modal-dialog modal-dialog-centered modal-lg" role="document">
+				<div class="modal-content">
+					<div class="modal-header">
+						<h5 class="modal-title" id="onlineLabel">
+							<strong>Online Players/Observers</strong>
+						</h5>
+						<button type="button" class="close" data-dismiss="modal" aria-label="Close">
+							<span aria-hidden="true">&times;</span>
+						</button>
+					</div>
+					<div class="modal-body row">
+						<div class="col-sm">
+							<h6>Players</h6>
+							<ul id="onlinePlayers">
+
+							</ul>
+						</div>
+						<div class="col-sm">
+							<h6>Observers</h6>
+							<ul id="onlineObservers">
+
+							</ul>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+
+		<div id="chatModal" class="modal fade" tabindex="-1" role="dialog" aria-labelledby="onlineLabel" aria-hidden="true">
+			<div class="modal-dialog modal-dialog-centered modal-lg" role="document">
+				<div class="modal-content">
+					<div class="modal-header">
+						<h5 class="modal-title" id="chatLabel">
+							<strong>Chat</strong>
+						</h5>
+						<button type="button" class="close" data-dismiss="modal" aria-label="Close">
+							<span aria-hidden="true">&times;</span>
+						</button>
+					</div>
+					<div class="modal-body">
+						<ul class="list-group" id="messages"></ul>
+						<div id="messageInput" class="input-group">
+							<input id="m" type="text" class="form-control">
+							<span class="input-group-btn">
+								<button class="btn btn-primary" type="button" id="messageButton">Send</button>
+							</span>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
 
 		<script src="index.js"></script>
 	</body>
