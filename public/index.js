@@ -37,6 +37,8 @@ $(() => {
 	var $noblesButton = $('#showNobles');
 	var $tokensToRemove = $('#tokensToRemove');
 	var $removeTokens = $('#removeTokens');
+	var onlinePlayers = {};
+	var onlineObservers = {};
 
 	// Replace all instances of the resources, tokens, cards, score,
 	// connected, and username variables with the Player fields.
@@ -70,34 +72,6 @@ $(() => {
 			reserved: 0
 		}
 	};
-	var resources = {
-		diamond: 0,
-		sapphire: 0,
-		emerald: 0,
-		ruby: 0,
-		onyx: 0,
-		gold: 0
-	};
-	var tokens = {
-		diamond: 0,
-		sapphire: 0,
-		emerald: 0,
-		ruby: 0,
-		onyx: 0,
-		gold: 0,
-		total: 0
-	};
-	var cards = {
-		diamond: 0,
-		sapphire: 0,
-		emerald: 0,
-		ruby: 0,
-		onyx: 0,
-		reserved: 0
-	};
-	var score;
-	var connected = false;
-	var username, userColor;
 
 	/******************************** GENERAL GAME STUFF ********************************/
 	swal({
@@ -123,6 +97,48 @@ $(() => {
 
 	$newGame.click(() => {
 		socket.emit('new game');
+	});
+
+	socket.on('all online', (players, observers) => {
+		for (let i = 0; i < players.length; i++) {
+
+			console.log(onlinePlayers[players[i].id]);
+			if (!onlinePlayers[players[i].id]) {
+				let playerLi = $('<li></li>').text(players[i].username).attr('user-id', players[i].id).addClass('onlinePlayer');
+				$('#onlinePlayers').append(playerLi);
+			}
+		}
+
+		for (let i = 0; i < observers.length; i++) {
+			if (!onlineObservers[observers[i].id]) {
+				let observerLi = $('<li></li>').text(observers[i].username).attr('user-id', observers[i].id).addClass('onlineObserver');
+				$('#onlineObservers').append(observerLi);
+			}
+		}
+	});
+
+	socket.on('new online player', (name, id) => {
+		onlinePlayers[id] = name;
+		let playerLi = $('<li></li>').text(name).attr('user-id', id).addClass('onlinePlayer');
+		$('#onlinePlayers').append(playerLi);
+	});
+
+	socket.on('new online observer', (name, id) => {
+		onlineObservers[id] = name;
+		let observerLi = $('<li></li>').text(name).attr('user-id', id).addClass('onlineObserver');
+		$('#onlineObservers').append(observerLi);
+	});
+
+	socket.on('disconnected player', (id) => {
+		$('.onlinePlayer').filter(function(i) {
+			return $(this).attr('user-id') === id;
+		}).remove();
+	});
+
+	socket.on('disconnected observer', (id) => {
+		$('.onlineObserver').filter(function (i) {
+			return $(this).attr('user-id') === id;
+		}).remove();
 	});
 
 	socket.on('disable new game button', () => {
@@ -166,6 +182,9 @@ $(() => {
 			}
 			$(this).append($("<p></p>").text(`${id}`));
 		});
+		$('#gameArea').attr('hidden', false);
+		$('#greeting').removeClass('centered');
+		$newGame.attr('hidden', true);
 	});
 
 	socket.on('display token', (token, number) => {
@@ -206,7 +225,8 @@ $(() => {
 			$(`#deck${i}Cards`).empty();
 		}
 		$('#cards').attr('hidden', true);
-		for (let token in tokens) {
+		for (let token in Player.tokens) {
+			Player.tokens[token] = 0;
 			if (token !== 'total') {
 				$(`#${token}Tokens`).empty();
 			}
@@ -218,6 +238,9 @@ $(() => {
 		$('#cardsInHand').children('.col').each(function () {
 			$(this).empty();
 		});
+		$('#gameArea').attr('hidden', true);
+		$('#greeting').addClass('centered');
+		$newGame.attr('hidden', false);
 	});
 
 	socket.on('enable new game button', () => {
@@ -229,12 +252,11 @@ $(() => {
 	});
 
 	function join(name) {
-		username = name ? name : names[Math.floor(Math.random() * names.length)];
+		Player.username = name ? name : names[Math.floor(Math.random() * names.length)];
 		userColor = colors[Math.floor(Math.random() * colors.length)];
-		connected = true;
-		score = 0;
-		// $('#yourUsername').text(`${username} (You)`).css('color', userColor);
-		socket.emit('new user', username, userColor);
+		Player.connected = true;
+		Player.score = 0;
+		socket.emit('new user', Player.username, userColor);
 	}
 
 	/******************************** CARD STUFF ********************************/
@@ -254,13 +276,13 @@ $(() => {
 		// Add the purchased card to the player's hand
 		// Also remove the class to properly position the card
 		getCard(data.card);
-		cards[data.card.type] += 1;
+		Player.cards[data.card.type] += 1;
 		if (data.reserved) {
-			cards.reserved -= 1;
+			Player.cards.reserved -= 1;
 		}
-		resources[data.card.type]++;
-		score += data.card.points;
-		socket.emit('check nobles', cards);
+		Player.resources[data.card.type]++;
+		Player.score += data.card.points;
+		socket.emit('check nobles', Player.cards);
 	});
 
 	socket.on('reserve card', (card, src) => {
@@ -270,7 +292,7 @@ $(() => {
 				break;
 			case 'card':
 				getCard(card, true);
-				cards.reserved++;
+				Player.cards.reserved++;
 		}
 	});
 
@@ -294,11 +316,11 @@ $(() => {
 		let amounts = [];
 		let goldToRemove = 0;
 		for (let token in price) {
-			if (cards[token] < price[token]) {
-				let diff = price[token] - cards[token];
-				let amount = tokens[token];
-				if (tokens[token] < diff) {
-					goldToRemove += diff - tokens[token];
+			if (Player.cards[token] < price[token]) {
+				let diff = price[token] - Player.cards[token];
+				let amount = Player.tokens[token];
+				if (Player.tokens[token] < diff) {
+					goldToRemove += diff - Player.tokens[token];
 				}
 				tokensToRemove.push(token);
 				amounts.push(amount);
@@ -315,7 +337,7 @@ $(() => {
 	// Also remove the class to properly position the card
 	function getCard(card, reserved) {
 		let id = reserved ? '#reservedcih' : `#${card.type}cih`;
-		let margins = reserved ? cards.reserved : cards[card.type];
+		let margins = reserved ? Player.cards.reserved : Player.cards[card.type];
 		$(id)
 			.append($(`[json='${JSON.stringify(card)}']`)
 				.removeClass('col-md-3')
@@ -329,14 +351,14 @@ $(() => {
 			$(`[json='${JSON.stringify(card)}']`).children().unbind("click").click({
 				src: 'card',
 				card: card,
-				resources: resources,
+				resources: Player.resources,
 				reserved: reserved
 			}, validateCard);
 		}
 	}
 
 	function reserveCard(event) {
-		if (cards.reserved < 3) {
+		if (Player.cards.reserved < 3) {
 			socket.emit('reserve card', event.data);
 		} else {
 			sweetAlert('error', 'You have already reserved 3 cards.');
@@ -350,7 +372,7 @@ $(() => {
 			src: 'card',
 			card: card,
 			deck: deck,
-			resources: resources
+			resources: Player.resources
 		}, validateCard);
 		var cardTop = $('<div></div>').addClass('top');
 		var pointsSpan = $('<span></span>').addClass('points').text(card.points === 0 ? '' : card.points);
@@ -383,11 +405,11 @@ $(() => {
 			colDiv = $('<div></div>').attr('json', JSON.stringify(card));
 			colDiv.append(cardDiv)
 				.css({
-					"margin-top": `${cards.reserved * 50}px`,
-					"margin-left": `${cards.reserved * 5}px`,
+					"margin-top": `${Player.cards.reserved * 50}px`,
+					"margin-left": `${Player.cards.reserved * 5}px`,
 					"position": 'absolute'
 				});
-			cards.reserved += 1;
+			Player.cards.reserved += 1;
 			$('#reserved').append(colDiv);
 		}
 	}
@@ -418,8 +440,8 @@ $(() => {
 	socket.on('get token', (token, double, lastGrab) => {
 		addTokenToHand(token, double);
 
-		if ((tokens.total > 10 && token === 'gold') || (tokens.total > 10 && lastGrab)) {
-			chooseTokensToRemove(tokens.total - 10);
+		if ((Player.tokens.total > 10 && token === 'gold') || (Player.tokens.total > 10 && lastGrab)) {
+			chooseTokensToRemove(Player.tokens.total - 10);
 		} else if (lastGrab || token === 'gold') {
 			socket.emit('next turn');
 		}
@@ -434,21 +456,21 @@ $(() => {
 	}
 
 	function addTokenToHand(token, double) {
-		tokens[token]++;
-		tokens.total++;
-		resources[token]++;
+		Player.tokens[token]++;
+		Player.tokens.total++;
+		Player.resources[token]++;
 		let tokenDiv = $(`#${token}Tokens div:last-child`).css({
-			'margin-left': `${tokens[token] * 5}px`
+			'margin-left': `${Player.tokens[token] * 5}px`
 		});
 		tokenDiv.children().unbind('click');
 		$(`#${token}tih`).append(tokenDiv);
 
 		if (double) {
-			tokens[token]++;
-			tokens.total++;
-			resources[token]++;
+			Player.tokens[token]++;
+			Player.tokens.total++;
+			Player.resources[token]++;
 			tokenDiv = $(`#${token}Tokens div:last-child`).unbind('click').css({
-				'margin-left': `${tokens[token] * 5}px`
+				'margin-left': `${Player.tokens[token] * 5}px`
 			});
 			$(`#${token}tih`).append(tokenDiv);
 		}
@@ -493,10 +515,10 @@ $(() => {
 				for (let j = 0; j < amounts[i]; j++) {
 					$(`#${tokensToRemove[i]}tih div:last-child`).remove();
 					addTokenToStack(tokensToRemove[i]);
-					resources[tokensToRemove[i]]--;
+					Player.resources[tokensToRemove[i]]--;
 					// Player.tokens[tokensToRemove[i]]--;
-					tokens[tokensToRemove[i]]--;
-					tokens.total--;
+					Player.tokens[tokensToRemove[i]]--;
+					Player.tokens.total--;
 				}
 				socket.emit('add token to stack', tokensToRemove[i], amounts[i]);
 			}
@@ -510,12 +532,12 @@ $(() => {
 	}
 
 	function chooseTokensToRemove(number) {
-		for (let token in tokens) {
-			if (token !== 'total' && tokens[token] > 0) {
+		for (let token in Player.tokens) {
+			if (token !== 'total' && Player.tokens[token] > 0) {
 				let div = $('<div></div>').addClass('col text-center');
 				let imgDiv = $('<div></div>').append($(`<img src='/assets/gems/${token}.png' width='100' height='100'>`)
 					.addClass(`token ${token}-token`));
-				let min = Math.min(number, tokens[token]);
+				let min = Math.min(number, Player.tokens[token]);
 				let numInput = $(`<input type='number' min='0' max='${min}' placeholder='Max of ${min}' class='number-removed'>`).css('width', '100px').data('token', token);
 				div.append(imgDiv, numInput);
 				$tokensToRemove.append(div);
@@ -539,12 +561,37 @@ $(() => {
 			tokenData.push($(this).data('token'));
 			total += tempVal;
 		});
-		if (total !== tokens.total - 10) {
-			sweetAlert('info', `Please choose only ${tokens.total - 10} ${tokens.total - 10 === 1 ? 'token' : 'tokens'}.`);
+		if (total !== Player.tokens.total - 10) {
+			sweetAlert('info', `Please choose only ${Player.tokens.total - 10} ${Player.tokens.total - 10 === 1 ? 'token' : 'tokens'}.`);
 		} else {
 			$tokensToRemove.empty();
 			removeTokensFromHand(tokenData, values);
 		}
+	});
+
+	/******************************** CHAT STUFF ********************************/
+	socket.on('chat message', (msg) => {
+		var tempLi = $('<li></li>').text(msg);
+		tempLi.addClass("list-group-item");
+		$('#messages').append(tempLi);
+		$('#messages').scrollTop($('#messages')[0].scrollHeight);
+	});
+
+	$('#messageButton').click(() => {
+		socket.emit('chat message', $('#m').val());
+		$('#m').val('');
+	});
+
+	$('#m').keypress((e) => {
+		if (e.which === 13) {
+			socket.emit('chat message', $('#m').val());
+			$('#m').val('');
+			return false;
+		}
+	});
+
+	$('#chatModal').on('shown.bs.modal', (e) => {
+		$('#messages').scrollTop($('#messages')[0].scrollHeight);
 	});
 
 	/******************************** MISC STUFF ********************************/
@@ -553,12 +600,12 @@ $(() => {
 	});
 
 	socket.on('get noble', (noble) => {
-		$(`img[name='${noble.name}']`).parent().append($(`<h6>Taken by ${username}</h6>`));
-		score += 3;
+		$(`img[name='${noble.name}']`).parent().append($(`<h6>Taken by ${Player.username}</h6>`));
+		Player.score += 3;
 	});
 
 	socket.on('assign noble', (noble) => {
-		$(`img[name='${noble.name}']`).parent().append($(`<h6>Taken by ${username}</h6>`));
+		$(`img[name='${noble.name}']`).parent().append($(`<h6>Taken by ${Player.username}</h6>`));
 	});
 
 	// Alerts the player(s)

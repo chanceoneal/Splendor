@@ -61,53 +61,46 @@ io.on('connection', (socket) => {
 
 			if (gameInProgress) {
 				socket.emit('alert', 'info', 'Game is currently in progress. You may join if a spot opens up, or when the game ends if there are less than 4 players');
-				socket.emit('disable new game button');
-				socket.emit('show board');
+				// socket.emit('show board');
 			} else {
 				socket.emit('alert', 'error', 'Lobby is full. You may observe until a spot opens up.');
-				socket.emit('disable new game button');
 			}
+
+			socket.emit('disable new game button');
+			socket.broadcast.emit('new online observer', name, socket.id);
+			io.emit('chat message', `${socket.username} has joined as an observer.`);
 		} else {
 			players.push({
 				id: socket.id,
 				username: name,
 			});
+
+			socket.broadcast.emit('new online player', name, socket.id);
+			io.emit('chat message', `${socket.username} has joined as a player.`);
 		}
+
+		socket.emit('all online', players, observers);
 	});
 
 	socket.on('disconnect', () => {
-		var points = socket.points;
-		if (players.findIndex(player => player.id === socket.id) === -1 && observers.findIndex(observer => observer.id === socket.id) !== -1) {
+		if (observers.findIndex(observer => observer.id === socket.id) !== -1) {
 			// Removes the disconnected player from the observers array if they were an observer.
 			observers.splice(observers.findIndex(observer => observer.id === socket.id), 1);
+			io.emit('disconnected observer', socket.id);
+			io.emit('chat message', `${socket.username} (observer) has disconnected.`);
 		} else if (players.findIndex(player => player.id === socket.id) !== -1) {
 			// Removes the disconnected player from the players array if they were a player.
 			players.splice(players.findIndex(player => player.id === socket.id), 1);
-		}
-
-		// Places the most recent observer in the players array and enables the new game button if game is not in progress.
-		if (observers.length > 0) {
-			if (!gameInProgress) {
+			io.emit('disconnected player', socket.id);
+			io.emit('chat message', `${socket.username} (player) has disconnected.`);
+			if (observers.length > 0) {
 				io.to(observers[0].id).emit('enable new game button');
-			} else {
-				observers[0].points = socket.points;
+				io.emit('disconnected observer', observers[0].id);
+				io.emit('chat message', `${observers[0].username} is now a player.`);
+				players.push(observers.shift());
+				io.emit('new online player', players[players.length].username, players[players.length].id);
 			}
-
-			players.push(observers.shift());
-		}
-
-		if (players.length <= 1) {
-			turns = 0;
-			gameInProgress = false;
-			lastTurn = false;
-
-			io.emit('clear board');
-			io.emit('enable new game button');
-			io.emit('nobles button', true);
-			checkTokens(true);
-
-		} else if (gameInProgress) {
-			whoseTurn();
+			gameOver();
 		}
 	});
 
@@ -144,7 +137,6 @@ io.on('connection', (socket) => {
 		noblesInGame = chooseNobles();
 		io.emit('generate nobles', nobleSrc, noblesInGame);
 
-		whoseTurn();
 		gameInProgress = true;
 		lastTurn = false;
 		currentWinnerID = null;
@@ -153,7 +145,11 @@ io.on('connection', (socket) => {
 		leastCards = 0;
 		io.emit('disable new game button');
 		io.emit('nobles button', false);
-		io.emit('show board');
+		for (let i = 0; i < players.length; i++) {
+			io.to(players[i].id).emit('show board');
+		}
+		io.emit('chat message', `A new game has begun!`);
+		whoseTurn();
 	});
 
 	/************************************ CARD STUFF ************************************/
@@ -176,24 +172,16 @@ io.on('connection', (socket) => {
 		socket.cards++;
 		socket.emit('get card', data);
 		socket.broadcast.emit('remove card', data);
+		io.emit('chat message', `${socket.username} (${socket.points}) purchased ${RegExp(/^[aeiouAEIOU]/).test(data.card.type) ? 'an' : 'a'} ${data.card.type} card worth ${data.card.points} points.`);
 		switch (data.deck) {
 			case 'deck1':
 				io.emit('display card', 'deck1', deck1.pop());
-				// if (!data.reserved) {
-				// 	io.emit('display card', 'deck1', deck1.pop());
-				// }
 				break;
 			case 'deck2':
 				io.emit('display card', 'deck2', deck2.pop());
-				// if (!data.reserved) {
-				// 	io.emit('display card', 'deck2', deck2.pop());
-				// }
 				break;
 			case 'deck3':
 				io.emit('display card', 'deck3', deck3.pop());
-				// if (!data.reserved) {
-				// 	io.emit('display card', 'deck3', deck3.pop());
-				// }
 				break;
 		}
 		if (deckIsEmpty(data.deck)) {
@@ -202,7 +190,7 @@ io.on('connection', (socket) => {
 	});
 
 	// Factor 'get card' and 'reserve card'
-	socket.on('reserve card', (data, src) => {
+	socket.on('reserve card', (data) => {
 		if (isObserver(socket.id)) {
 			socket.emit('alert', 'error', "You cannot do that; you are currently an observer.");
 			return;
@@ -217,6 +205,7 @@ io.on('connection', (socket) => {
 			return;
 		}
 
+		io.emit('chat message', `${socket.username} (${socket.points}) reserved a card.`);
 		switch (data.src) {
 			case 'deck':
 				switch (data.deck) {
@@ -305,6 +294,7 @@ io.on('connection', (socket) => {
 			socket.gemsTaken.length = 0;
 			socket.emit('get token', data.token, double, true);
 			socket.broadcast.emit('remove token from stack', data.token, double);
+			io.emit('chat message', `${socket.username} (${socket.points}) took two ${data.token} tokens.`);
 		} else if (socket.gemsTaken.length === 1 && socket.gemsTaken[0] === data.token && tokens[data.token] >= 3) {
 			// Allows the player to take the same token twice in a row if it's the only token they've taken.
 			tokens[data.token]--;
@@ -313,6 +303,7 @@ io.on('connection', (socket) => {
 			socket.gemsTaken.length = 0;
 			socket.emit('get token', data.token, false, true);
 			socket.broadcast.emit('remove token from stack', data.token);
+			io.emit('chat message', `${socket.username} (${socket.points}) took two ${data.token} tokens.`);
 		} else {
 			// Allows the player to take a token and determines if the player's turn is over.
 			tokens[data.token]--;
@@ -323,6 +314,7 @@ io.on('connection', (socket) => {
 			socket.emit('get token', data.token, false, (socket.gemsTaken.length >= 3) || (totalTokens === 0));
 			socket.broadcast.emit('remove token from stack', data.token);
 			if (totalTokens === 0 || socket.gemsTaken.length >= 3) {
+				io.emit('chat message', `${socket.username} (${socket.points}) took these tokens: ${socket.gemsTaken.join(', ')}`);
 				socket.gemsTaken.length = 0;
 				socket.hasTakenGem = false;
 			}
@@ -335,11 +327,17 @@ io.on('connection', (socket) => {
 		socket.broadcast.emit('add token to stack', token, number);
 	});
 
+	/************************************ CHAT STUFF ************************************/
+	socket.on('chat message', (msg) => {
+		io.emit('chat message', `${socket.username} (${socket.points}): ${msg}`);
+	});
+
 	/************************************ MISC STUFF ************************************/
 	socket.on('check nobles', (cards) => {
 		let qualifiedNobles = checkNobles(cards);
 		if (qualifiedNobles.length !== 0) {
 			socket.points += 3;
+			io.emit('chat message', `${socket.username} (${socket.points}) has received a visit from a noble!`);
 			socket.emit('get noble', qualifiedNobles[0]);
 			socket.broadcast.emit('assign noble', qualifiedNobles[0]);
 			noblesInGame.splice(noblesInGame.indexOf(qualifiedNobles[0]), 1);
@@ -425,6 +423,7 @@ function chooseNobles() {
 function whoseTurn() {
 	var player = players[turns % players.length];
 	io.to(player.id).emit('notify');
+	io.emit('chat message', `It is ${player.username}'s turn.`);
 }
 
 function isPlayerTurn(id) {
@@ -443,6 +442,9 @@ function gameOver() {
 	io.emit('enable new game button');
 	io.emit('nobles button', true);
 	io.emit('clear nobles');
+	for (let i = 0; i < observers.length; i++) {
+		io.to(observers[i].id).emit('disable new game button');
+	}
 }
 
 /**************************************** CARD STUFF ***************************************/
