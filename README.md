@@ -3,4 +3,4 @@
 
 The unimagineably fun board game of Splendor: a cutthroat game of resource management.
 
-[Entry point](./Readme Pics/entry.png)
+![Entry point](entry.png)
